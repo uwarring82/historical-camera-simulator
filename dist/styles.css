@@ -14,3 +14,5 @@
 .finder-sx70 .finder-frame{left:50%;top:50%;width:22%;aspect-ratio:1/1;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.7);background:repeating-conic-gradient(rgba(255,255,255,.22) 0 12.5%,rgba(0,0,0,.12) 0 25%) center/10px 10px}
 .media-stage.finder-on video,.media-stage.finder-on img{filter:contrast(.92) saturate(.9)}
 .media-stage.finder-rolleiflex video,.media-stage.finder-rolleiflex img{transform:scaleX(-1)}
+.dof-blur{position:absolute;inset:0;pointer-events:none;display:none}
+.media-stage:has(canvas[style*="block"]) .dof-blur{display:none!important}

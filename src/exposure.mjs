@@ -23,3 +23,22 @@ export function settingsSummary(cameraId, state) {
   if (cameraId === 'sx70') return `${state.focus} · L/D ${state.compensation}`;
   return `${state.aperture} · ${state.shutter} · ${state.focus}`;
 }
+
+// --- Focus / depth of field (heuristic) -------------------------------------------------
+// A photo has no depth map. We assume a flat ground plane seen from 1.2 m height with the
+// horizon at 45% of frame height; everything above the horizon is at infinity. This is a
+// crude stand-in so that focus + aperture visibly matter. NOT a calibrated optical model.
+export const HORIZON = 0.45, EYE_HEIGHT_M = 1.2, MAX_BLUR_PX = 14;
+export function parseFocusMm(s) { const m = /^([\d.]+)\s*m/.exec(String(s ?? '')); return m ? Number(m[1]) * 1000 : null; } // null = infinity
+export function dofParams(camera, state) {
+  const N = parseAperture(state.aperture) ?? 8; // SX-70 has no aperture control: nominal f/8 assumed
+  return { focalMm: camera.nominalFocalMm, fNumber: N, focusMm: parseFocusMm(state.focus), frameMm: camera.frameMm };
+}
+/** Blur radius in px at relative frame height v (0 top .. 1 bottom) for an image `widthPx` wide. */
+export function rowBlurRadius(dof, v, widthPx) {
+  const d = v <= HORIZON + 0.01 ? Infinity : (EYE_HEIGHT_M * 1000) / (v - HORIZON) * 0.65; // mm
+  const invS = dof.focusMm ? 1 / dof.focusMm : 0, invD = Number.isFinite(d) ? 1 / d : 0;
+  const S = dof.focusMm ?? Infinity;
+  const coc = (dof.focalMm * dof.focalMm) / (dof.fNumber * (1 - dof.focalMm / S)) * Math.abs(invS - invD); // mm on the film
+  return Math.min(MAX_BLUR_PX, Math.round(coc / dof.frameMm * widthPx * 0.5));
+}

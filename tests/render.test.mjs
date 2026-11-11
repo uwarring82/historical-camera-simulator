@@ -39,3 +39,17 @@ test('camera settings change exposure in both modes',()=>{
  const v=renderReference(frame,'leica',{grain:0,vignette:40});
  assert.ok(v.data[0]<v.data[(4*8+4)*4]);
 });
+
+import { rowBlurRadius, dofParams } from '../src/exposure.mjs';
+import { getCamera } from '../src/cameras.mjs';
+test('focus distance and aperture change depth blur',()=>{
+ const cam=getCamera('leica');
+ const near=dofParams(cam,{aperture:'f/2.8',focus:'1 m'}), far=dofParams(cam,{aperture:'f/2.8',focus:'∞'}), stopped=dofParams(cam,{aperture:'f/16',focus:'1 m'});
+ assert.ok(rowBlurRadius(near,0.2,1000)>0, 'sky blurs when focused near');
+ assert.equal(rowBlurRadius(far,0.2,1000),0);
+ assert.ok(rowBlurRadius(far,1,1000)>0, 'near ground blurs when focused at infinity');
+ assert.ok(rowBlurRadius(stopped,0.2,1000)<rowBlurRadius(near,0.2,1000));
+ const frame={width:300,height:300,data:new Uint8ClampedArray(300*300*4).map((_,i)=>i%4===3?255:(i>>2)%2?255:0)};
+ const blurred=renderReference(frame,'leica',{grain:0,dof:near});
+ assert.notDeepEqual(blurred.data,renderReference(frame,'leica',{grain:0}).data);
+});

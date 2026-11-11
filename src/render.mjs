@@ -1,5 +1,6 @@
 import { getCamera } from './cameras.mjs';
 import { stampReseau } from './reseau.mjs';
+import { rowBlurRadius } from './exposure.mjs';
 
 // Deterministic integer-only reference transform; not a calibrated film response.
 const clamp8 = n => n < 0 ? 0 : n > 255 ? 255 : n;
@@ -29,6 +30,7 @@ export function renderReference({ data, width, height }, cameraId, settings = {}
       out[i] = (out[i] * mult) >> 8; out[i + 1] = (out[i + 1] * mult) >> 8; out[i + 2] = (out[i + 2] * mult) >> 8;
     }
   }
+  if (settings.dof) depthBlur(out, width, height, settings.dof);
   if (cameraId === 'apollo') stampReseau(out, width, height);
   const seed = (settings.seed ?? 123456789) >>> 0;
   const random = xorshift32(seed);
@@ -61,4 +63,30 @@ export function renderReference({ data, width, height }, cameraId, settings = {}
     out[i + 3] = data[i + 3];
   }
   return { data: out, width, height };
+}
+
+/** Row-dependent box blur (separable, prefix sums). Radius per row from the ground-plane focus model. */
+function depthBlur(px, w, h, dof) {
+  const radii = new Uint8Array(h); let any = false;
+  for (let y = 0; y < h; y++) { radii[y] = rowBlurRadius(dof, (y + 0.5) / h, w); if (radii[y]) any = true; }
+  if (!any) return;
+  const tmp = new Uint8ClampedArray(px.length);
+  const row = new Uint32Array((w + 1) * 3);
+  for (let y = 0; y < h; y++) { // horizontal
+    const r = radii[y], base = y * w * 4;
+    for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) row[(x + 1) * 3 + c] = row[x * 3 + c] + px[base + x * 4 + c];
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(w - 1, x + r), n = x1 - x0 + 1;
+      for (let c = 0; c < 3; c++) tmp[base + x * 4 + c] = ((row[(x1 + 1) * 3 + c] - row[x0 * 3 + c]) + (n >> 1)) / n | 0;
+      tmp[base + x * 4 + 3] = px[base + x * 4 + 3];
+    }
+  }
+  const col = new Uint32Array((h + 1) * 3);
+  for (let x = 0; x < w; x++) { // vertical
+    for (let y = 0; y < h; y++) for (let c = 0; c < 3; c++) col[(y + 1) * 3 + c] = col[y * 3 + c] + tmp[(y * w + x) * 4 + c];
+    for (let y = 0; y < h; y++) {
+      const r = radii[y], y0 = Math.max(0, y - r), y1 = Math.min(h - 1, y + r), n = y1 - y0 + 1;
+      for (let c = 0; c < 3; c++) px[(y * w + x) * 4 + c] = ((col[(y1 + 1) * 3 + c] - col[y0 * 3 + c]) + (n >> 1)) / n | 0;
+    }
+  }
 }

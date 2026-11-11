@@ -2,7 +2,7 @@ import { CAMERA_ORDER, getCamera } from './cameras.mjs';
 import { newCameraState, updateCamera, canExpose, cameraStatus } from './state.mjs';
 import { renderReference } from './render.mjs';
 import { CaptureAdapter, imageFromFile, imageFromUrl, sourceToFrame } from './capture.mjs';
-import { cameraRenderParams, settingsSummary } from './exposure.mjs';
+import { cameraRenderParams, settingsSummary, dofParams, rowBlurRadius, HORIZON } from './exposure.mjs';
 import { photographMetadata, downloadBlob } from './metadata.mjs';
 
 const $ = id => document.getElementById(id);
@@ -85,7 +85,18 @@ function redrawControls() {
   $('shutter').disabled = !canExpose(state);
   $('shutter-hint').textContent = canExpose(state) ? (usingLive ? 'Live capture' : 'Uses the imported or demo source') : 'Prepare the camera to expose';
 }
+function previewFocus() {
+  const el = $('dof-blur'); if (!el) return;
+  const dof = dofParams(getCamera(cameraId), state); const W = 1000;
+  let maxR = 0; for (let v = 0.46; v <= 1; v += 0.04) maxR = Math.max(maxR, rowBlurRadius(dof, v, W));
+  const stops = []; // mask opacity per row: blur amount relative to max
+  for (let i = 0; i <= 20; i++) { const v = i / 20; stops.push(`rgba(0,0,0,${maxR ? Math.min(1, rowBlurRadius(dof, v, W) / maxR) : 0}) ${i * 5}%`); }
+  el.style.backdropFilter = el.style.webkitBackdropFilter = `blur(${Math.round(maxR * 0.6)}px)`;
+  el.style.maskImage = el.style.webkitMaskImage = `linear-gradient(to bottom, ${stops.join(',')})`;
+  el.style.display = maxR ? 'block' : 'none';
+}
 function previewExposure() {
+  previewFocus();
   const p = cameraRenderParams(cameraId, state, $('operation-mode').value);
   const f = `brightness(${Math.pow(2, p.exposureStops).toFixed(3)})`;
   const dim = cameraId === 'rolleiflex' ? ' contrast(.92) saturate(.9) brightness(.85)' : ' contrast(.92) saturate(.9)'; // ground glass is dim
@@ -122,7 +133,7 @@ async function expose() {
     const w = targetSize, h = targetSize;
     const frame = sourceToFrame(bitmap, w, h);
     exposureCount += 1;
-    const renderSettings = { ...settings(), ...cameraRenderParams(cameraId, state, $('operation-mode').value), cameraSettings: { ...state } };
+    const renderSettings = { ...settings(), ...cameraRenderParams(cameraId, state, $('operation-mode').value), dof: dofParams(getCamera(cameraId), state), dofModel: 'flat-ground-heuristic', cameraSettings: { ...state } };
     renderSettings.summary = settingsSummary(cameraId, state);
     const result = renderReference(frame,cameraId,renderSettings);
     const canvas = $('photo-canvas'); canvas.width = w; canvas.height = h;
