@@ -2,6 +2,7 @@ import { CAMERA_ORDER, getCamera } from './cameras.mjs';
 import { newCameraState, updateCamera, canExpose, cameraStatus } from './state.mjs';
 import { renderReference } from './render.mjs';
 import { CaptureAdapter, imageFromFile, imageFromUrl, sourceToFrame } from './capture.mjs';
+import { cameraRenderParams, settingsSummary } from './exposure.mjs';
 import { photographMetadata, downloadBlob } from './metadata.mjs';
 
 const $ = id => document.getElementById(id);
@@ -87,7 +88,7 @@ function redrawPreview() {
   const isHistoricalApollo = cameraId === 'apollo' && $('operation-mode').value === 'historical' && !photo;
   const overlay = $('aiming-overlay'); overlay.style.display = isHistoricalApollo ? 'flex' : 'none';
   $('viewport-label').textContent = isHistoricalApollo ? 'HISTORICAL AIMING · NO REFLEX VIEW' : photo ? 'PROCESSED PHOTOGRAPH' : usingLive ? 'LIVE DIGITAL VIEW' : 'DEMONSTRATION SCENE';
-  $('preview-info').textContent = photo ? `RENDERED · ${provenance.method.toUpperCase()}` : usingLive ? 'LIVE CAMERA · PREVIEW ONLY' : 'SYNTHETIC DEMO · NOT A PHOTOGRAPH';
+  $('preview-info').textContent = photo ? `${photo.settings.summary} · ${provenance.method.toUpperCase()}` : usingLive ? 'LIVE CAMERA · PREVIEW ONLY' : 'SYNTHETIC DEMO · NOT A PHOTOGRAPH';
   $('demo-image').style.display = (usingLive || photo) ? 'none' : 'block';
   $('live-video').style.display = usingLive && !photo ? 'block' : 'none';
   $('photo-canvas').style.display = photo ? 'block' : 'none';
@@ -112,7 +113,8 @@ async function expose() {
     const w = targetSize, h = targetSize;
     const frame = sourceToFrame(bitmap, w, h);
     exposureCount += 1;
-    const renderSettings = settings();
+    const renderSettings = { ...settings(), ...cameraRenderParams(cameraId, state, $('operation-mode').value), cameraSettings: { ...state } };
+    renderSettings.summary = settingsSummary(cameraId, state);
     const result = renderReference(frame,cameraId,renderSettings);
     const canvas = $('photo-canvas'); canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext('2d');
@@ -124,7 +126,7 @@ async function expose() {
     // SX-70 development is a UI step, not a simulated chemical timing model.
     if (source.method !== 'import' && bitmap.close) bitmap.close();
     redrawControls(); redrawPreview(); $('export').disabled = false;
-    message(`Frame captured: ${w} × ${h} px via ${source.method}. Export to preserve it; this alpha does not store images.`);
+    message(`Frame captured with ${renderSettings.summary} (exposure ${renderSettings.exposureStops >= 0 ? '+' : ''}${renderSettings.exposureStops} stops, vignette ${renderSettings.vignette}%): ${w} × ${h} px via ${source.method}. Export to preserve it; this alpha does not store images.`);
   } catch (err) { message(err.message || 'Capture failed.',true); }
   finally { $('shutter').disabled = !canExpose(state); }
 }

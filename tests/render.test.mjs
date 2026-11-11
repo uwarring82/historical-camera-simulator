@@ -26,3 +26,16 @@ test('evidence mode ignores artistic warmth',()=>{
  const b=renderReference(frame,'sx70',{seed:5,grain:0,renderMode:'evidence',warmth:50});
  assert.deepEqual(a.data,b.data);
 });
+
+import { cameraRenderParams } from '../src/exposure.mjs';
+test('historical settings change exposure; assisted holds it',()=>{
+ const s={aperture:'f/2.8',shutter:'1/500 s'};
+ assert.equal(cameraRenderParams('leica',s,'assisted').exposureStops,0);
+ assert.ok(cameraRenderParams('leica',{...s,shutter:'1/30 s'},'historical').exposureStops>cameraRenderParams('leica',s,'historical').exposureStops);
+ const frame={width:8,height:8,data:new Uint8ClampedArray(8*8*4).fill(100)};
+ const dark=renderReference(frame,'leica',{grain:0,exposureStops:-1});
+ const light=renderReference(frame,'leica',{grain:0,exposureStops:1});
+ assert.ok(light.data[0]>dark.data[0]);
+ const v=renderReference(frame,'leica',{grain:0,vignette:40});
+ assert.ok(v.data[0]<v.data[(4*8+4)*4]);
+});

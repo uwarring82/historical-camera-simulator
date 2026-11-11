@@ -17,6 +17,18 @@ export function renderReference({ data, width, height }, cameraId, settings = {}
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || data.length !== width * height * 4) throw new RangeError('Invalid RGBA frame');
   const out = new Uint8ClampedArray(data);
   // Optical processing will occur here before film-plane marks; v0.1 has no calibrated lens convolution.
+  const vignette = Math.max(0, Math.min(100, Math.round(settings.vignette ?? 0)));
+  if (vignette > 0) {
+    // Integer radial falloff (cos^4-like): darkens corners, scaled by aperture-derived strength.
+    const cx2 = width - 1, cy2 = height - 1, maxR2 = cx2 * cx2 + cy2 * cy2 || 1;
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      const dx = 2 * x - cx2, dy = 2 * y - cy2;
+      const r2 = Math.floor(((dx * dx + dy * dy) * 1024) / maxR2);
+      const mult = 256 - Math.floor((vignette * r2 * 256) / (100 * 1024));
+      const i = (y * width + x) * 4;
+      out[i] = (out[i] * mult) >> 8; out[i + 1] = (out[i + 1] * mult) >> 8; out[i + 2] = (out[i + 2] * mult) >> 8;
+    }
+  }
   if (cameraId === 'apollo') stampReseau(out, width, height);
   const seed = (settings.seed ?? 123456789) >>> 0;
   const random = xorshift32(seed);
@@ -24,9 +36,10 @@ export function renderReference({ data, width, height }, cameraId, settings = {}
   const creativeWarmth = Math.max(-50, Math.min(50, Math.round(settings.warmth ?? 0)));
   const renderMode = settings.renderMode === 'creative' ? 'creative' : 'evidence';
   const warm = renderMode === 'creative' ? creativeWarmth : 0;
+  const gain = Math.round(256 * Math.pow(2, Math.max(-4, Math.min(4, settings.exposureStops ?? 0))));
   const grainAmplitude = Math.floor((camera.grainBase * intensity + 50) / 100);
   for (let i = 0; i < out.length; i += 4) {
-    const r = out[i], g = out[i + 1], b = out[i + 2];
+    const r = clamp8((out[i] * gain + 128) >> 8), g = clamp8((out[i + 1] * gain + 128) >> 8), b = clamp8((out[i + 2] * gain + 128) >> 8);
     let rr, gg, bb;
     if (camera.color === 'bw') {
       const gray = (77 * r + 150 * g + 29 * b + 128) >> 8;
