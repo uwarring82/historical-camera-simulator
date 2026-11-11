@@ -133,6 +133,17 @@ async function exportPhoto() {
   const canvas = $('photo-canvas'); const filename = `camera-archive-${cameraId}-${String(state.framesTaken).padStart(3,'0')}`;
   const png = await new Promise(resolve => canvas.toBlob(resolve,'image/png'));
   if (!png) { message('PNG export failed.',true); return; }
+  // iOS: the share sheet offers "Save Image" (adds to the Photos library). Web pages cannot write to Photos directly.
+  const file = new File([png], filename+'.png', { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'Camera Archive photograph' });
+      message('Shared. Choose "Save Image" in the share sheet to add it to Photos.');
+      return;
+    } catch (err) {
+      if (err?.name === 'AbortError') { message('Save cancelled.'); return; }
+    }
+  }
   downloadBlob(png,filename+'.png');
   const json = photographMetadata(cameraId,state,photo.settings,provenance);
   downloadBlob(new Blob([JSON.stringify(json,null,2)],{type:'application/json'}),filename+'.json');
