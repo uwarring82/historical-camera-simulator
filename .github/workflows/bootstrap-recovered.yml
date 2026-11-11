@@ -46,6 +46,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add -A -- . ':!.github/workflows'
           git commit -m 'Extract original 59 v0.1.0 files without modifications'
           git push
