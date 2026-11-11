@@ -12,8 +12,8 @@ export function cameraRenderParams(cameraId, state, operationMode = 'assisted') 
     exposureStops = (Number(state.compensation) || 0) * 0.5; // Lighten/darken dial; scale is a guess.
     vignette = 15;
   } else if (f && t) {
-    // Assisted mode: simulated metering holds exposure constant. Historical: settings change density.
-    if (operationMode === 'historical') exposureStops = Math.max(-4, Math.min(4, Math.log2(t / REF_T) + 2 * Math.log2(REF_F / f)));
+    // Settings always change density relative to the f/5.6 · 1/125 s reference (iPhone Safari cannot set real exposure).
+    exposureStops = Math.max(-4, Math.min(4, Math.log2(t / REF_T) + 2 * Math.log2(REF_F / f)));
     vignette = VIGNETTE_BY_F[f] ?? 15;
   }
   return { exposureStops: Math.round(exposureStops * 100) / 100, vignette };

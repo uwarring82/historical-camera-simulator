@@ -57,6 +57,7 @@ function controlButton(host, label, title, action, disabled = false) {
   group.append(btn); host.append(group);
 }
 function redrawControls() {
+  previewExposure();
   const c = getCamera(cameraId); const host = $('mechanical-controls'); host.replaceChildren();
   $('active-camera-name').textContent = c.name;
   $('camera-description').textContent = c.description;
@@ -84,7 +85,13 @@ function redrawControls() {
   $('shutter').disabled = !canExpose(state);
   $('shutter-hint').textContent = canExpose(state) ? (usingLive ? 'Live capture' : 'Uses the imported or demo source') : 'Prepare the camera to expose';
 }
+function previewExposure() {
+  const p = cameraRenderParams(cameraId, state, $('operation-mode').value);
+  const f = `brightness(${Math.pow(2, p.exposureStops).toFixed(3)})`;
+  $('live-video').style.filter = f; $('demo-image').style.filter = f;
+}
 function redrawPreview() {
+  previewExposure();
   const isHistoricalApollo = cameraId === 'apollo' && $('operation-mode').value === 'historical' && !photo;
   const overlay = $('aiming-overlay'); overlay.style.display = isHistoricalApollo ? 'flex' : 'none';
   $('viewport-label').textContent = isHistoricalApollo ? 'HISTORICAL AIMING · NO REFLEX VIEW' : photo ? 'PROCESSED PHOTOGRAPH' : usingLive ? 'LIVE DIGITAL VIEW' : 'DEMONSTRATION SCENE';

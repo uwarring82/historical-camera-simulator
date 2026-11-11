@@ -28,9 +28,9 @@ test('evidence mode ignores artistic warmth',()=>{
 });
 
 import { cameraRenderParams } from '../src/exposure.mjs';
-test('historical settings change exposure; assisted holds it',()=>{
- const s={aperture:'f/2.8',shutter:'1/500 s'};
- assert.equal(cameraRenderParams('leica',s,'assisted').exposureStops,0);
+test('camera settings change exposure in both modes',()=>{
+ const s={aperture:'f/5.6',shutter:'1/500 s'};
+ assert.ok(cameraRenderParams('leica',s,'assisted').exposureStops<0);
  assert.ok(cameraRenderParams('leica',{...s,shutter:'1/30 s'},'historical').exposureStops>cameraRenderParams('leica',s,'historical').exposureStops);
  const frame={width:8,height:8,data:new Uint8ClampedArray(8*8*4).fill(100)};
  const dark=renderReference(frame,'leica',{grain:0,exposureStops:-1});
