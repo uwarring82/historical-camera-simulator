@@ -1,0 +1,51 @@
+name: Bootstrap recovered starter source
+on:
+  push:
+    paths:
+      - '.github/workflows/bootstrap-recovered.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Extract and validate untouched original repository files
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, zipfile
+          root = Path.cwd()
+          source = root / 'releases/historical-camera-simulator-v0.1.0-RECOVERED-20261111.zip'
+          expected = '80c3f211a1e08029dec4a0d7ef1812f88f26531dd4f14779d5da5ac0f548f036'
+          assert hashlib.sha256(source.read_bytes()).hexdigest() == expected, "Original ZIP checksum mismatch"
+          with zipfile.ZipFile(source) as archive:
+              names = archive.namelist()
+              assert len(names) == 59, f"Expected 59 files, found {len(names)}"
+              assert archive.testzip() is None, "ZIP CRC failure"
+              for info in archive.infolist():
+                  assert not info.is_dir(), "Unexpected directory entry"
+                  prefix = 'historical-camera-simulator/'
+                  assert info.filename.startswith(prefix), "Unexpected ZIP path"
+                  rel = Path(info.filename.removeprefix(prefix))
+                  assert rel.parts and '..' not in rel.parts and not rel.is_absolute(), "Unsafe member path"
+                  dest = root / rel
+                  original = archive.read(info.filename)
+                  if dest.exists():
+                      assert dest.read_bytes() == original, f"Existing file differs: {dest}"
+                  else:
+                      dest.parent.mkdir(parents=True, exist_ok=True)
+                      dest.write_bytes(original)
+                  assert dest.read_bytes() == original, f"Write verification failed: {dest}"
+          print("Recovered and verified exactly 59 original files")
+          PY
+      - name: Commit original source files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Extract original 59 v0.1.0 files without modifications'
+          git push
