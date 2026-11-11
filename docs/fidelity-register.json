@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "status": "provisional evidence targets; no calibration approvals",
+  "classification": {"A": "documented historically", "B": "quantitatively calibrated within declared domain", "C": "phenomenological approximation"},
+  "models": [
+    {"id":"apollo-reseau","camera":"apollo","property":"cross positions","evidenceTarget":"A","implementation":"prototype","validated":false,"filmWidthMm":53,"glassPlateMm":54,"crossSpacingMm":10,"armLengthMm":1,"armWidthMm":0.02,"centralCrossScale":2,"sourceRefs":["alsj-reseau","zeiss-biogon"]},
+    {"id":"biogon-60-optics","camera":"apollo","property":"lens MTF, vignetting, distortion","evidenceTarget":"B","implementation":"not started","validated":false,"sourceRefs":["zeiss-biogon"]},
+    {"id":"apollo-film","camera":"apollo","property":"film tone/color/grain","evidenceTarget":"C","implementation":"simplified integer profile","validated":false},
+    {"id":"sx70-exposure-programme","camera":"sx70","property":"quantitative exposure programme","evidenceTarget":"C","implementation":"not implemented","validated":false,"sourceRefs":["polaroid-sx70"]},
+    {"id":"sx70-film","camera":"sx70","property":"instant film color/grain/development","evidenceTarget":"C","implementation":"simplified color/grain only","validated":false},
+    {"id":"leica-film","camera":"leica","property":"film rendering","evidenceTarget":"C","implementation":"generic B&W transform","validated":false},
+    {"id":"rolleiflex-film","camera":"rolleiflex","property":"medium-format film rendering","evidenceTarget":"C","implementation":"generic B&W transform","validated":false}
+  ],
+  "sources": {
+    "alsj-reseau":"https://www.apollojournals.org/alsj/alsj-reseau.html",
+    "zeiss-biogon":"https://www.nasa.gov/wp-content/uploads/static/history/alsj/Biogon5.6_60mm_ZEISS.pdf",
+    "nasa-apollo17":"https://eol.jsc.nasa.gov/searchphotos/Metadata/Apollo17.htm",
+    "leica-m1":"https://leicahistorica.com/M1.html",
+    "rolleiflex-28f":"https://kameramuseum.de/objekte/rollei-rolleiflex-28-f/",
+    "polaroid-sx70":"https://support.polaroid.com/hc/en-us/articles/115012463268-Polaroid-SX-70-series-cameras"
+  }
+}

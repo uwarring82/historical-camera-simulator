@@ -1,0 +1,11 @@
+{
+  "name": "Camera Archive — Historical Camera Simulator",
+  "short_name": "Camera Archive",
+  "description": "An experimental instrument simulator for historical cameras.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#141a1b",
+  "theme_color": "#141a1b",
+  "icons": [{"src":"./icons/icon.svg","sizes":"any","type":"image/svg+xml"},{"src":"./icons/apple-touch-icon.png","sizes":"180x180","type":"image/png"}]
+}
