@@ -38,7 +38,7 @@ function setCamera(id) {
   message(`${getCamera(id).name} selected. Film and lens characteristics are currently phenomenological.`);
 }
 function setState(action) {
-  try { state = updateCamera(state, action); redrawControls(); }
+  try { state = updateCamera(state, action); redrawControls(); redrawPreview(); }
   catch (e) { message(e.message, true); }
 }
 function controlSelect(host, label, key, values) {
@@ -88,19 +88,21 @@ function redrawControls() {
 function previewExposure() {
   const p = cameraRenderParams(cameraId, state, $('operation-mode').value);
   const f = `brightness(${Math.pow(2, p.exposureStops).toFixed(3)})`;
-  $('live-video').style.filter = f; $('demo-image').style.filter = f;
+  const dim = cameraId === 'rolleiflex' ? ' contrast(.92) saturate(.9) brightness(.85)' : ' contrast(.92) saturate(.9)'; // ground glass is dim
+  $('live-video').style.filter = f + dim; $('demo-image').style.filter = f + dim;
+  $('shutter-hint').dataset.ev = p.exposureStops;
 }
 function redrawPreview() {
   previewExposure();
+  const stage = $('media-stage');
+  stage.className = 'media-stage' + (cameraId !== 'apollo' && !photo ? ` finder-on finder-${cameraId}` : '');
   const isHistoricalApollo = cameraId === 'apollo' && $('operation-mode').value === 'historical' && !photo;
   const overlay = $('aiming-overlay'); overlay.style.display = isHistoricalApollo ? 'flex' : 'none';
-  $('viewport-label').textContent = isHistoricalApollo ? 'HISTORICAL AIMING · NO REFLEX VIEW' : photo ? 'PROCESSED PHOTOGRAPH' : usingLive ? 'LIVE DIGITAL VIEW' : 'DEMONSTRATION SCENE';
-  $('preview-info').textContent = photo ? `${photo.settings.summary} · ${provenance.method.toUpperCase()}` : usingLive ? 'LIVE CAMERA · PREVIEW ONLY' : 'SYNTHETIC DEMO · NOT A PHOTOGRAPH';
+  $('viewport-label').textContent = isHistoricalApollo ? 'HISTORICAL AIMING · NO REFLEX VIEW' : photo ? 'PROCESSED PHOTOGRAPH' : cameraId !== 'apollo' ? (usingLive ? 'LIVE · SUCHER (VIEWFINDER)' : 'DEMO · SUCHER (VIEWFINDER)') : usingLive ? 'LIVE DIGITAL VIEW' : 'DEMONSTRATION SCENE';
+  $('preview-info').textContent = photo ? `${photo.settings.summary} · ${provenance.method.toUpperCase()}` : usingLive ? `LIVE · ${settingsSummary(cameraId, state)} · EV ${cameraRenderParams(cameraId, state).exposureStops}` : usingLive ? 'LIVE CAMERA · PREVIEW ONLY' : 'SYNTHETIC DEMO · NOT A PHOTOGRAPH';
   $('demo-image').style.display = (usingLive || photo) ? 'none' : 'block';
   $('live-video').style.display = usingLive && !photo ? 'block' : 'none';
   $('photo-canvas').style.display = photo ? 'block' : 'none';
-  if (cameraId === 'rolleiflex' && !photo) $('demo-image').style.transform = 'scaleX(-1)';
-  else $('demo-image').style.transform = '';
 }
 
 function settings() {
