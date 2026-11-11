@@ -1,14 +1,20 @@
 /** Browser capture adapter. Photo resolution/metadata must be measured on actual iPhones. */
 export class CaptureAdapter {
   constructor(video) { this.video = video; this.stream = null; this.method = 'demo'; }
-  async start() {
+  async start(deviceId = null) {
     if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera unavailable. Use HTTPS on an iPhone or import an image.');
     this.stop();
-    this.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 } } });
+    this.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: 'environment' } }), width: { ideal: 3840 }, height: { ideal: 2160 } } });
     this.video.srcObject = this.stream;
     await this.video.play();
     this.method = 'live';
-    return { width: this.video.videoWidth, height: this.video.videoHeight, label: this.stream.getVideoTracks()[0]?.label ?? '' };
+    const track = this.stream.getVideoTracks()[0];
+    return { width: this.video.videoWidth, height: this.video.videoHeight, label: track?.label ?? '', deviceId: track?.getSettings?.().deviceId ?? deviceId };
+  }
+  /** Rear lenses; labels (e.g. "Back Ultra Wide Camera") are only exposed after permission is granted. */
+  async lenses() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter(d => d.kind === 'videoinput' && !/front|user|facetime/i.test(d.label));
   }
   stop() {
     if (this.stream) this.stream.getTracks().forEach(t => t.stop());

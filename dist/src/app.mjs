@@ -121,7 +121,7 @@ async function expose() {
     if (!ctx) throw new Error('Canvas unavailable.');
     ctx.putImageData(new ImageData(result.data,w,h),0,0);
     photo = { cameraId, settings: renderSettings };
-    provenance = { method:source.method, sourceWidth: bitmap.width, sourceHeight: bitmap.height, outputWidth:w,outputHeight:h, calibration:'none', imageInput:sourceSelection };
+    provenance = { method:source.method, sourceWidth: bitmap.width, sourceHeight: bitmap.height, outputWidth:w,outputHeight:h, calibration:'none', imageInput:sourceSelection, lens: usingLive ? lensLabel : null };
     state = updateCamera(state,{type:'expose'});
     // SX-70 development is a UI step, not a simulated chemical timing model.
     if (source.method !== 'import' && bitmap.close) bitmap.close();
@@ -152,14 +152,21 @@ async function exportPhoto() {
   message('PNG and JSON export requested. Confirm both files were saved by your browser.');
 }
 
-$('start-camera').addEventListener('click', async () => {
+let lensLabel = '';
+async function startLive(deviceId = null) {
   try {
-    const info = await capture.start();
+    const info = await capture.start(deviceId);
+    lensLabel = info.label;
+    const sel = $('lens-select'); const lenses = await capture.lenses();
+    sel.replaceChildren(...lenses.map(l => { const o = element('option', { value: l.deviceId, text: l.label || 'Camera' }); if (l.deviceId === info.deviceId) o.selected = true; return o; }));
+    sel.hidden = lenses.length < 2;
     usingLive = true; sourceSelection='live'; photo=null; $('export').disabled=true;
     redrawPreview(); redrawControls();
-    message(`Camera started (${info.width} × ${info.height} video preview). Actual still resolution will be reported after capture.`);
+    message(`Camera started: ${info.label || 'rear camera'} (${info.width} × ${info.height} preview). Actual still resolution will be reported after capture.`);
   } catch (err) { message(`Camera could not start: ${err.message}`,true); }
-});
+}
+$('start-camera').addEventListener('click', () => startLive());
+$('lens-select').addEventListener('change', () => startLive($('lens-select').value));
 $('import-file').addEventListener('change', async evt => {
   const file = evt.target.files?.[0]; if (!file) return;
   try {
