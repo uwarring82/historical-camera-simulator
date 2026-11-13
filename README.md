@@ -93,3 +93,15 @@ docs/                    White paper, CI handbook, Phase-0 protocols, fidelity/r
 ## License
 
 Original code and interface artwork in this starter: **MIT** (see `LICENSE`). Historical names and third-party trademarks remain those of their owners. The source links provided in documents are citations, **not** relicensed material. No historical manufacturer photographs or NASA image files are bundled.
+
+## The entrance, field guide, and studio
+
+The refreshed interface keeps the core app buildless and dependency-free:
+
+- `index.html` is the entrance: a camera showcase, an image-making timeline, an interactive aperture illustration, and the four-instrument collection.
+- `learn.html?chapter=history` opens the field guide. Chapters cover `light`, `exposure`, `seeing`, and `about`, plus `apollo`, `sx70`, `leica`, and `rolleiflex`. Historical chapters include external source links; camera chapters distinguish original specifications from prototype configuration.
+- `studio.html` opens the simulator. `?camera=sx70` (or another camera ID) selects an instrument directly. The hardware-inspired dials work with sliders, arrow keys, and step buttons; mechanical preparation still follows the existing state machines.
+
+The illustrations are original schematic SVG artwork. See the [bundled asset register](docs/asset-register.md) for origins and rights. No third-party product photos, fonts, or scripts are fetched by the interface. The service worker caches the entrance, studio, guide, and their modules, including offline navigation to query-selected chapters. User images are never added to that cache.
+
+The optional browser suite covers entrance-to-studio navigation, keyboard aperture controls, camera preparation, image capture, all guide chapters, and desktop/mobile overflow. Run it with `npm run test:browser` after installing `@playwright/test` and its Chromium and WebKit browsers in your development environment.

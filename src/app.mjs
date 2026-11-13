@@ -4,9 +4,12 @@ import { renderReference } from './render.mjs';
 import { CaptureAdapter, imageFromFile, imageFromUrl, sourceToFrame } from './capture.mjs';
 import { cameraRenderParams, settingsSummary, dofParams, rowBlurRadius, HORIZON } from './exposure.mjs';
 import { photographMetadata, downloadBlob } from './metadata.mjs';
+import { cameraArtwork } from './illustrations.mjs';
+import './site.mjs';
 
 const $ = id => document.getElementById(id);
-let cameraId = 'apollo';
+const requestedCamera = new URLSearchParams(location.search).get('camera');
+let cameraId = CAMERA_ORDER.includes(requestedCamera) ? requestedCamera : 'apollo';
 let state = newCameraState(cameraId);
 let photo = null;
 let provenance = { method: 'demo', sourceWidth: null, sourceHeight: null };
@@ -15,7 +18,6 @@ let usingLive = false;
 let sourceSelection = 'demo';
 let exposureCount = 0;
 const capture = new CaptureAdapter($('live-video'));
-const buttons = new Map();
 const seed = 0x172017;
 
 function message(text, error = false) { $('feedback').textContent = text; $('feedback').classList.toggle('error', error); }
@@ -23,7 +25,7 @@ function closeSource() { if (activeSource?.close) activeSource.close(); activeSo
 function element(tag, options = {}) { const el = document.createElement(tag); for (const [k,v] of Object.entries(options)) { if (k === 'text') el.textContent = v; else el.setAttribute(k, v); } return el; }
 function optionButton(camera) {
   const button = element('button', {type:'button', class:'camera-option', 'data-camera':camera.id, 'aria-pressed': String(camera.id === cameraId)});
-  button.innerHTML = `<span class="year">${camera.year}</span><strong>${camera.short}</strong><small>${camera.subtitle}</small><span class="active-indicator">${camera.id === cameraId ? '●' : '○'}</span>`;
+  button.innerHTML = `<span class="camera-thumb">${cameraArtwork(camera.id, 'selector-' + camera.id)}</span><span><span class="year">${camera.year}</span><strong>${camera.short}</strong><small>${camera.subtitle}</small></span><span class="active-indicator" aria-hidden="true">${camera.id === cameraId ? '●' : '○'}</span>`;
   button.addEventListener('click', () => setCamera(camera.id));
   return button;
 }
@@ -33,33 +35,84 @@ function populateCameras() {
 }
 function setCamera(id) {
   cameraId = id; state = newCameraState(id); photo = null;
+  const url = new URL(location.href); url.searchParams.set('camera', id); history.replaceState(null, '', url);
   $('photo-canvas').style.display = 'none'; $('export').disabled = true;
-  populateCameras(); redrawControls(); redrawPreview();
+  for (const button of $('camera-options').children) {
+    const active = button.dataset.camera === id;
+    button.setAttribute('aria-pressed', String(active));
+    button.querySelector('.active-indicator').textContent = active ? '●' : '○';
+  }
+  redrawControls(); redrawPreview();
   message(`${getCamera(id).name} selected. Film and lens characteristics are currently phenomenological.`);
 }
 function setState(action) {
-  try { state = updateCamera(state, action); redrawControls(); redrawPreview(); }
+  const focused = document.activeElement?.dataset.focusKey;
+  try {
+    state = updateCamera(state, action); redrawControls(); redrawPreview();
+    if (focused) $('mechanical-controls').querySelector(`[data-focus-key="${focused}"]`)?.focus({preventScroll:true});
+  }
   catch (e) { message(e.message, true); }
 }
 function controlSelect(host, label, key, values) {
-  const group = element('div', {class:'mechanical-group'});
-  const lbl = element('label', {text:label});
-  const select = element('select', {'aria-label':label});
-  values.forEach(value => { const opt = element('option', {value,text:value}); if (state[key] === value) opt.selected = true; select.append(opt); });
-  select.addEventListener('change', () => setState({type:'set', key, value: select.value}));
-  group.append(lbl,select); host.append(group);
+  const group = element('fieldset', {class:'mechanical-group', 'data-control':key});
+  group.append(element('legend', {text:label}));
+  if (key === 'magazine') {
+    const loaded = state.magazine === 'loaded';
+    const toggle = element('button', {type:'button',class:'magazine-switch','aria-label':'Film magazine loaded','aria-pressed':String(loaded),'data-focus-key':'magazine'});
+    toggle.append(element('span', {'aria-hidden':'true'}));
+    toggle.addEventListener('click', () => setState({type:'set',key,value:loaded ? 'removed' : 'loaded'}));
+    group.append(toggle, element('span', {class:'magazine-description',text:loaded ? 'Magazine engaged' : 'Magazine removed'}));
+    host.append(group); return;
+  }
+  const units = {aperture:'F / STOP',shutter:'SECONDS',focus:'DISTANCE',compensation:'LIGHT / DARK'};
+  const hardware = element('div', {class:'dial-hardware','aria-hidden':'true'});
+  const knob = element('div', {class:'dial-knob'});
+  const pointer = element('span', {class:'dial-pointer'});
+  const readout = element('span', {class:'dial-value'});
+  knob.append(pointer, readout); hardware.append(knob);
+  const scale = element('div', {class:'dial-scale','aria-hidden':'true'});
+  values.forEach(value => scale.append(element('span', {text:value.replace('f/','').replace('1/','').replace(' s','').replace(' m','')})));
+  const adjust = element('div', {class:'dial-adjust'});
+  const input = element('input', {type:'range',id:'control-'+key,min:'0',max:String(values.length-1),step:'1',value:String(Math.max(0,values.indexOf(state[key]))),'aria-label':label,'data-focus-key':key});
+  const less = element('button', {type:'button',text:'−','aria-label':`Decrease ${label.toLowerCase()}`});
+  const more = element('button', {type:'button',text:'+','aria-label':`Increase ${label.toLowerCase()}`});
+  function draw() {
+    const index = Number(input.value), value = values[index];
+    input.setAttribute('aria-valuetext', value);
+    pointer.style.setProperty('--dial-angle', `${-125 + index / (values.length-1) * 250}deg`);
+    readout.replaceChildren(document.createTextNode(value.replace('f/','').replace(' s','')),
+      element('small', {text:units[key] || ''}));
+    [...scale.children].forEach((mark,i) => mark.dataset.active = String(i===index));
+    less.disabled = index===0; more.disabled = index===values.length-1;
+  }
+  function change(index) {
+    input.value = String(Math.min(values.length-1, Math.max(0,index)));
+    state = updateCamera(state, {type:'set',key,value:values[Number(input.value)]});
+    draw(); redrawPreview();
+  }
+  input.addEventListener('input', () => change(Number(input.value)));
+  less.addEventListener('click', () => change(Number(input.value)-1));
+  more.addEventListener('click', () => change(Number(input.value)+1));
+  adjust.append(less,input,more); group.append(hardware,scale,adjust); host.append(group); draw();
 }
 function controlButton(host, label, title, action, disabled = false) {
-  const group = element('div', {class:'mechanical-group'});
-  group.append(element('label',{text:label}));
-  const btn = element('button', {type:'button',text:title}); btn.disabled = disabled;
-  btn.addEventListener('click', () => setState(action));
-  group.append(btn); host.append(group);
+  const group = element('fieldset', {class:'mechanical-group mechanical-action'});
+  group.append(element('legend',{text:label}));
+  const button = element('button', {type:'button',class:'hardware-action','aria-label':title,'data-focus-key':action.type});
+  const hardware = element('span', {class:'transport-hardware','aria-hidden':'true'});
+  hardware.innerHTML = action.type==='advance' ? '<span class="transport-wheel"></span><span class="transport-arm"></span>' : `<span class="fold-symbol" aria-hidden="true">${action.type==='toggle-fold' ? '⌑' : action.type==='developed' ? '▣' : '▤'}</span>`;
+  button.append(hardware,element('span', {class:'action-caption',text:title}));
+  button.disabled=disabled; button.addEventListener('click',()=>setState(action));
+  group.append(button); host.append(group);
 }
 function redrawControls() {
   previewExposure();
   const c = getCamera(cameraId); const host = $('mechanical-controls'); host.replaceChildren();
   $('active-camera-name').textContent = c.name;
+  $('workbench').dataset.camera = cameraId;
+  $('camera-story-link').href = `./learn.html?chapter=${cameraId}`;
+  const engravings = {apollo:'HASSELBLAD / DATA CAMERA',sx70:'POLAROID / SX-70 LAND CAMERA',leica:'LEITZ WETZLAR / M1',rolleiflex:'ROLLEIFLEX / 2.8 F'};
+  $('instrument-engraving').textContent = engravings[cameraId];
   $('camera-description').textContent = c.description;
   $('fidelity-indicator').textContent = `MECHANICS ${c.mechanicalEvidence} TARGET · RENDER ${c.renderingEvidence}`;
   $('mechanical-status').textContent = cameraStatus(state);
@@ -109,8 +162,9 @@ function redrawPreview() {
   stage.className = 'media-stage' + (cameraId !== 'apollo' && !photo ? ` finder-on finder-${cameraId}` : '');
   const isHistoricalApollo = cameraId === 'apollo' && $('operation-mode').value === 'historical' && !photo;
   const overlay = $('aiming-overlay'); overlay.style.display = isHistoricalApollo ? 'flex' : 'none';
-  $('viewport-label').textContent = isHistoricalApollo ? 'HISTORICAL AIMING · NO REFLEX VIEW' : photo ? 'PROCESSED PHOTOGRAPH' : cameraId !== 'apollo' ? (usingLive ? 'LIVE · SUCHER (VIEWFINDER)' : 'DEMO · SUCHER (VIEWFINDER)') : usingLive ? 'LIVE DIGITAL VIEW' : 'DEMONSTRATION SCENE';
-  $('preview-info').textContent = photo ? `${photo.settings.summary} · ${provenance.method.toUpperCase()}` : usingLive ? `LIVE · ${settingsSummary(cameraId, state)} · EV ${cameraRenderParams(cameraId, state).exposureStops}` : usingLive ? 'LIVE CAMERA · PREVIEW ONLY' : 'SYNTHETIC DEMO · NOT A PHOTOGRAPH';
+  $('viewport-label').textContent = isHistoricalApollo ? 'HISTORICAL AIMING · NO REFLEX VIEW' : photo ? 'PROCESSED PHOTOGRAPH' : cameraId !== 'apollo' ? (usingLive ? 'LIVE · VIEWFINDER' : sourceSelection==='import' ? 'IMPORTED · VIEWFINDER' : 'DEMO · VIEWFINDER') : usingLive ? 'LIVE DIGITAL VIEW' : sourceSelection==='import' ? 'IMPORTED PHOTOGRAPH' : 'DEMONSTRATION SCENE';
+  $('preview-info').textContent = photo ? `${photo.settings.summary} · ${provenance.method.toUpperCase()}` : usingLive ? `LIVE · ${settingsSummary(cameraId, state)}` : sourceSelection==='import' ? `IMPORTED · ${settingsSummary(cameraId, state)}` : 'SYNTHETIC DEMO · NOT A PHOTOGRAPH';
+  $('mode-explanation').textContent = $('operation-mode').value==='historical' ? 'Historical · instrument-style aiming' : 'Assisted · digital aiming available';
   $('demo-image').style.display = (usingLive || photo) ? 'none' : 'block';
   $('live-video').style.display = usingLive && !photo ? 'block' : 'none';
   $('photo-canvas').style.display = photo ? 'block' : 'none';
@@ -209,5 +263,4 @@ $('operation-mode').addEventListener('change',redrawPreview);
 $('render-mode').addEventListener('change', () => message('Rendering mode selected. Changes take effect at the next exposure.'));
 for (const id of ['grain','warmth']) $(id).addEventListener('input',()=>{ $(id+'-value').value = $(id).value; });
 window.addEventListener('pagehide',()=>capture.stop());
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 populateCameras();redrawControls();redrawPreview();
