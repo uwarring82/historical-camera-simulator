@@ -91,7 +91,7 @@ test('the cached field guide opens an unvisited chapter after its origin stops',
  const types = {'.html':'text/html','.css':'text/css','.mjs':'text/javascript','.js':'text/javascript','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webmanifest':'application/manifest+json'};
  const server = createServer(async(req,res)=>{
   const file = new URL(req.url,'http://localhost').pathname.slice(1) || 'index.html';
-  const relative = /^(sw\.js|manifest\.webmanifest|demo-scene\.|icons\/)/.test(file) ? path.join('public',file) : file;
+  const relative = /^(sw\.js|(?:manifest|studio)\.webmanifest|demo-scene\.|icons\/)/.test(file) ? path.join('public',file) : file;
   const target = path.resolve(root,relative);
   if (!target.startsWith(root+path.sep)) {res.writeHead(403).end();return;}
   try { const body = await readFile(target); res.writeHead(200,{'Content-Type':types[path.extname(target)] || 'application/octet-stream'}).end(body); }
@@ -166,4 +166,60 @@ test('a device feed continues in the finder after release and stops when switchi
  })).toBe(true);
  await page.getByRole('button',{name:'Demo',exact:true}).click();
  expect(await page.evaluate(()=>window.fixtureTrack.readyState)).toBe('ended');
+});
+
+test('iPhone 17 Pro deck keeps touch targets inside the safe viewport', async({page})=>{
+  for (const [width,height,top,side,bottom] of [
+    [402,874,62,0,34],[402,714,0,0,0],[402,690,0,0,34],[874,402,0,62,21],[874,320,0,62,0]
+  ]) {
+    await page.setViewportSize({width,height});
+    await page.goto('/studio.html');
+    await page.addStyleTag({content:`:root{--safe-top:${top}px;--safe-right:${side}px;--safe-bottom:${bottom}px;--safe-left:${side}px}`});
+    await page.getByLabel('Rendering',{exact:true}).selectOption('creative');
+    for (const id of ['apollo','sx70','rolleiflex','leica']) {
+      await page.locator('.camera-option[data-camera="'+id+'"]').click();
+      const problems = await page.evaluate(({width,height,top,side,bottom})=>{
+        return [...document.querySelectorAll('nav a,nav button, #workbench button, .camera-option, #workbench select, #workbench input')]
+          .filter(el=>el.getClientRects().length && !el.disabled).flatMap(el=>{
+            const r = el.getBoundingClientRect(), name = el.id || el.textContent.trim();
+            const center = document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+            if (r.width < 43.9 || r.height < 43.9 || r.left < side-.5 || r.right > width-side+.5 ||
+                r.top < top-.5 || r.bottom > height-bottom+.5 || !el.contains(center)) return [name];
+            return [];
+          });
+      },{width,height,top,side,bottom});
+      expect(problems, id+' at '+width+' × '+height).toEqual([]);
+      expect(await page.evaluate(()=>document.documentElement.scrollHeight)).toBeLessThanOrEqual(height+1);
+    }
+  }
+});
+
+test('Rolleiflex magnification and reversal are confined to its optical finder', async({page})=>{
+  await page.goto('/studio.html?camera=rolleiflex');
+  await page.getByLabel('Finder',{exact:true}).selectOption('historical');
+  const proof = page.locator('#proof'), loupe = page.getByRole('button',{name:'Focusing magnifier'});
+  await expect(proof).toHaveCSS('transform','matrix(-1, 0, 0, 1, 0, 0)');
+  await expect.poll(()=>proof.evaluate(c=>c.width>0 && c.getContext('2d').getImageData(10,10,1,1).data[3])).toBe(255);
+  const normal = await proof.evaluate(c=>c.toDataURL());
+  await loupe.click();
+  await expect(loupe).toHaveAttribute('aria-pressed','true');
+  expect(await proof.evaluate(c=>c.toDataURL())).not.toBe(normal);
+  await page.getByLabel('Finder',{exact:true}).selectOption('assisted');
+  await expect(loupe).toBeHidden();
+  await expect(proof).toHaveCSS('transform','none');
+  await page.getByRole('button',{name:'Expose photograph'}).click();
+  await page.getByRole('button',{name:'Last frame'}).click();
+  await expect(page.locator('#print-mat')).toHaveAttribute('data-camera','rolleiflex');
+});
+
+test('instant print stays in its mount after changing cameras',async({page})=>{
+  await page.goto('/studio.html?camera=sx70');
+  await page.getByRole('button',{name:'Unfold camera'}).click();
+  await page.getByRole('button',{name:'Insert 8-frame pack'}).click();
+  await page.getByRole('button',{name:'Expose photograph'}).click();
+  await page.getByRole('button',{name:'Leica M1'}).click();
+  await page.getByRole('button',{name:'Last frame'}).click();
+  await expect(page.locator('#print-mat')).toHaveAttribute('data-camera','sx70');
+  const {width,height}=await page.locator('.print-sheet').boundingBox();
+  expect(width/height).toBeCloseTo(88.47/107.52,2);
 });

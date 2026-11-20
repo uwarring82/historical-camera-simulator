@@ -55,3 +55,14 @@ test('focus distance and aperture change depth blur',()=>{
  const blurred=renderReference(frame,'leica',{grain:0,dof:near});
  assert.notDeepEqual(blurred.data,renderReference(frame,'leica',{grain:0}).data);
 });
+
+import { illuminationAt } from '../src/render.mjs';
+test('the Apollo Biogon uses its two aperture curves at physical film coordinates',()=>{
+  const c = getCamera('apollo');
+  const at30 = (30 / (Math.hypot(c.frameMm,c.frameHeightMm)/2)) ** 2;
+  for (const [aperture,expected] of [['f/5.6',.598],['f/8',.758],['f/16',.758]]) {
+    const settings = cameraRenderParams('apollo',{aperture,shutter:'1/125 s'});
+    assert.equal(illuminationAt(c,settings,0),1);
+    assert.ok(Math.abs(illuminationAt(c,settings,at30)-expected)<.001);
+  }
+});

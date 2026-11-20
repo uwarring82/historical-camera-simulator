@@ -1,3 +1,4 @@
+import { getCamera } from './cameras.mjs';
 import { filmFor } from './film.mjs';
 
 // The browser supplies a developed picture with unknown scene radiance. Treat its
@@ -18,8 +19,11 @@ export function cameraRenderParams(cameraId, state) {
   const f = parseAperture(state.aperture), t = parseShutter(state.shutter);
   const cameraStops = cameraId === 'sx70' ? Number(state.compensation || 0) * 0.5 :
     f && t ? Math.log2(t / REF_T) + 2 * Math.log2(REF_F / f) : 0;
-  const vignette = f ? Math.min(40, 20 * (REF_F / f) ** 1.6) : 15;
-  return { filmId: state.filmId, exposureStops: cameraStops + speedStops, vignette };
+  const c = getCamera(cameraId);
+  const cornerSlopeSquared = (c.frameMm ** 2 + c.frameHeightMm ** 2) / (4 * c.nominalFocalMm ** 2);
+  const params = {filmId:state.filmId, exposureStops:cameraStops + speedStops, cornerSlopeSquared};
+  if (cameraId === 'apollo') params.illuminationProfile = f === 5.6 ? 'biogon-f5.6' : 'biogon-f8';
+  return params;
 }
 
 // Approximate a broad reflected-light meter on the already developed input.
@@ -53,9 +57,11 @@ export function dofParams(camera, state) {
 }
 /** Blur radius in px at relative frame height v (0 top .. 1 bottom) for an image `widthPx` wide. */
 export function rowBlurRadius(dof, v, widthPx) {
+  const magnification = dof.magnification ?? 1;
+  v = 0.5 + (v - 0.5) / magnification;
   const d = dof.distantScene || v <= HORIZON + 0.01 ? Infinity : (EYE_HEIGHT_M * 1000) / (v - HORIZON) * 0.65; // mm
   const invS = dof.focusMm ? 1 / dof.focusMm : 0, invD = Number.isFinite(d) ? 1 / d : 0;
   const S = dof.focusMm ?? Infinity;
   const coc = (dof.focalMm * dof.focalMm) / (dof.fNumber * (1 - dof.focalMm / S)) * Math.abs(invS - invD); // mm on the film
-  return Math.min(MAX_BLUR_PX, Math.round(coc / dof.frameMm * widthPx * 0.5));
+  return Math.min(MAX_BLUR_PX, Math.round(coc / dof.frameMm * widthPx * magnification * 0.5));
 }

@@ -10,7 +10,7 @@ For manual bodies the multiplier on decoded linear light is
 (ISO / 100) × (time / (1/125 s)) × (5.6 / f-number)²
 ```
 
-At fixed aperture, ISO 100 at 1/125 s and ISO 400 at 1/500 s produce the same nominal midtone. The density fluctuations and depth of field are computed separately. A smooth display shoulder compresses highlights above linear 0.70. Monochrome conversion uses linear sRGB luminance. The color matrices, radial falloff and shoulder are illustrative. Actual film characteristic curves, reciprocity failure, shot noise, motion integration and spectral sensitivities require independent measurements.
+At fixed aperture, ISO 100 at 1/125 s and ISO 400 at 1/500 s produce the same nominal midtone. The density fluctuations and depth of field are computed separately. A smooth display shoulder compresses highlights above linear 0.70. Monochrome conversion uses linear sRGB luminance. The color matrices and shoulder are illustrative. Actual film characteristic curves, reciprocity failure, shot noise, motion integration and spectral sensitivities require independent measurements.
 
 The folding SX-70 has automatic exposure. A central-weighted log mean of the image estimates an exposure for 18% gray, limited to ±4 stops. The model uses a nominal ASA 100 meter and a modern ASA 160 pack, so neutral compensation adds about 0.68 stop relative to that reference. Each simulated dial division applies half a stop. Polaroid documents the speed mismatch and recommends adjusting the wheel. Its precise response and shutter programme vary by camera. A print ejects independently of the next exposure. The simulator shows an immediate proof.
 
@@ -41,7 +41,18 @@ A deterministic separable moving-average filter approximates the first horizonta
 
 ## Viewing and validation
 
-Historical viewing shows the scene optically. The Rolleiflex reverses the finder only and uses its viewing lens wide open. The Leica’s independent window stays clear when the taking lens is defocused. The historical Apollo body has no optical finder. Film preview shows an approximate developed result in each finder. Field of view and parallax relative to the device camera are uncalibrated. The distant demo landscape supports an infinity depth assumption. Other images use a heuristic ground plane.
+For a common input, a rectilinear film gate spans a source width proportional to gate width divided by focal length. The equivalent horizontal angle is 2 atan(gate width / (2 focal length)). The same scale in both axes fits all four gates and the Leica’s wider viewing window inside the input. Camera selection changes the crop at a fixed viewpoint. The PNG metadata records the source rectangle. Phone lens coverage, in-camera corrections and geometric parallax are unmeasured.
+
+| Body | Horizontal angle at infinity | Historical view and exposed frame |
+| --- | --- | --- |
+| Hasselblad, 53 mm gate / 60 mm Biogon | 47.7° | Chest-level aiming. Réseau marks register at the film plane. |
+| Leica M1, 36 / 50 | 39.6° | Both 35 and 50 mm bright lines remain visible. The inner frame maps to the exposure. An 8% window margin is illustrative. The clear independent window supports scale focusing. |
+| Rolleiflex 2.8F, 56 / 80 | 38.6° | Laterally reversed, wide-open viewing image. Tapping the screen raises the 2.5× loupe. The phone samples the central portion under magnification. The proof and export retain taking-lens framing and orientation. |
+| Original SX-70, 79 / 116 | 37.6° | Plain reflex screen of the early folding model. The meter samples the taking gate. Last frame presents the image in an 88.47 × 107.52 mm integral-print mount. The PNG contains the exposed area. |
+
+Zeiss published relative illuminance versus image height for the Biogon at f/5.6 and f/8. The renderer interpolates graph readings at 5 mm intervals. At 30 mm the curves give approximately 0.60 and 0.76 of central illumination, respectively. For smaller apertures the renderer retains the f/8 curve. Other lenses use ideal cos⁴ field-angle falloff. Actual pupil geometry, mechanical shading and phone lens corrections can change this response. The source is already a developed image.
+
+The distant demo landscape supports an infinity depth assumption. Other images use a heuristic ground plane. Live finder resolution adapts to measured rendering time. The final exposure always uses the source crop, with a maximum width of 1600 pixels.
 
 The unit tests check equal exposures, different granularity at equal speed, the measured-aperture reference, output sampling and seeded spatial statistics. A physical validation would require matched film exposures of uniform patches, common development conditions, scanner response measurements, and spectra of the resulting density fluctuations.
 
@@ -52,3 +63,7 @@ The unit tests check equal exposures, different granularity at equal speed, the 
 - [Kodak T-MAX 100, F-4016](https://www.kodakprofessional.com/sites/default/files/wysiwyg/pro/resources/f4016_TMax_100.pdf)
 - [Kodak T-MAX 400, F-4043](https://kodakprofessional.com/sites/default/files/wysiwyg/pro/resources/f4043_TMax_400.pdf)
 - [Kodak TRI-X, F-4017](https://business.kodakmoments.com/sites/default/files/files/resources/triXf4017.pdf)
+- [Zeiss Biogon 5.6/60 data sheet, p. 2](https://apollojournals.org/alsj/Biogon5.6_60mm_ZEISS.pdf)
+- [Leica Historica M1 specifications](https://leicahistorica.com/M1.html)
+- [Rollei catalogue, 1961–62, Rolleiflex 2.8F focusing hood](https://www.cameramanuals.org/rolleiflex/rollei_camera_acc_1961-62.pdf)
+- [Polaroid integral-film dimensions](https://support.polaroid.com/hc/en-us/articles/115012363647-What-are-Polaroid-photo-dimensions) and [early SX-70 focusing screens](https://www.polaroidmemories.nl/split-circle/)

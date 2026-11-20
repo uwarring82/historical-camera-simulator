@@ -1,6 +1,6 @@
 # Model and device limits
 
-- Film speed and three B&W RMS granularity values have published anchors. The model assumes spatial correlation lengths, a common display shoulder, proxy color matrices and radial falloff. See the [film model](film-model.md) for numeric inputs and validation scope.
+- Film speed and three B&W RMS granularity values have published anchors. The model assumes spatial correlation lengths, a common display shoulder, proxy color matrices and ideal radial falloff for three bodies. The Apollo profile uses readings from the Zeiss Biogon curves at two apertures. See the [film model](film-model.md) for numeric inputs and validation scope.
 - The browser supplies a developed image. Phone tone mapping, existing noise and clipped highlights cannot be recovered. The app models relative exposures and prints up to 1600 pixels wide.
 - Historical optical finders, nominal lenses and the centered film gates are schematic. Geometric parallax, lens MTF, effective device field of view and distortion have no physical calibration.
 - The panorama is treated as distant. Camera and imported images have no depth map. A flat-ground depth heuristic controls defocus.

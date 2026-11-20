@@ -10,7 +10,7 @@ export function photographMetadata(cameraId, state, settings, provenance) {
     film: { id: settings.filmId, ...filmFor(cameraId, settings.filmId) },
     simulation: {
       classification: 'C', rationale: 'Phenomenological film/color/grain; no calibrated photographic reconstruction',
-      referenceRenderer: 'film-density-v0.3', settings: { ...settings },
+      referenceRenderer: 'film-density-rectilinear-v0.4', settings: { ...settings },
       cameraState: { ...state }
     },
     acquisition: { ...provenance },

@@ -1,3 +1,5 @@
+import { CAMERAS } from './cameras.mjs';
+
 /** Browser capture adapter. Photo resolution/metadata must be measured on actual iPhones. */
 export class CaptureAdapter {
   constructor(video) { this.video = video; this.stream = null; this.method = 'demo'; }
@@ -63,20 +65,30 @@ export async function imageFromUrl(url) {
   return { bitmap: await createImageBitmap(await response.blob()), method: 'demo', bytes: null };
 }
 
-export function frameSize(camera, sourceWidth, sourceHeight, limit = 1600) {
-  const ratio = camera.frameMm / camera.frameHeightMm;
-  const width = Math.min(limit, sourceWidth, sourceHeight * ratio);
-  return {width: Math.max(1, Math.round(width)), height: Math.max(1, Math.round(width / ratio))};
+// Angular spans on a rectilinear source plane (twice tan of half the field).
+// Reserve scene around both Leica frames so there is real image outside the taking gate.
+const leicaWindowMm = 35 / 1.08;
+const maxSpanX = Math.max(36 / leicaWindowMm, ...Object.values(CAMERAS).map(c => c.frameMm / c.nominalFocalMm));
+const maxSpanY = Math.max(24 / leicaWindowMm, ...Object.values(CAMERAS).map(c => c.frameHeightMm / c.nominalFocalMm));
+
+export function viewGeometry(camera, iw, ih, {historical = false, magnification = 1} = {}) {
+  const focal = historical && camera.id === 'leica' ? leicaWindowMm : camera.nominalFocalMm;
+  const scale = Math.min(iw / maxSpanX, ih / maxSpanY) / (focal * magnification);
+  const width = camera.frameMm * scale, height = camera.frameHeightMm * scale;
+  return {x:(iw-width)/2, y:(ih-height)/2, width, height};
 }
-export function sourceToFrame(source, width, height, canvas = document.createElement('canvas')) {
+
+export function frameSize(camera, iw, ih, limit = 1600, view) {
+  const crop = viewGeometry(camera, iw, ih, view);
+  const scale = Math.min(1, limit / crop.width);
+  return {width:Math.max(1, Math.round(crop.width * scale)), height:Math.max(1, Math.round(crop.height * scale))};
+}
+
+export function sourceToFrame(source, width, height, crop, canvas = document.createElement('canvas')) {
   if (canvas.width !== width) canvas.width = width;
   if (canvas.height !== height) canvas.height = height;
   const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: false });
   if (!ctx) throw new Error('2D canvas unavailable');
-  const iw = source.videoWidth || source.naturalWidth || source.width;
-  const ih = source.videoHeight || source.naturalHeight || source.height;
-  const scale = Math.max(width / iw, height / ih);
-  const sw = width / scale, sh = height / scale;
-  ctx.drawImage(source, (iw - sw) / 2, (ih - sh) / 2, sw, sh, 0, 0, width, height);
+  ctx.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
   return ctx.getImageData(0, 0, width, height);
 }

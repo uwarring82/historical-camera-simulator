@@ -9,7 +9,7 @@ export const SOURCES = {
   landscape: ['Hannes Röst · Fronalpstock big', 'https://commons.wikimedia.org/wiki/File:Fronalpstock_big.jpg'],
   cc: ['Creative Commons · Attribution-ShareAlike 3.0', 'https://creativecommons.org/licenses/by-sa/3.0/'],
   nasa: ['NASA · Astronaut still photography during Apollo', 'https://www.nasa.gov/history/astronaut-still-photography-during-apollo/'],
-  biogon: ['ZEISS · Biogon 5.6/60 technical data (PDF, NASA archive)', 'https://www.nasa.gov/wp-content/uploads/static/history/alsj/Biogon5.6_60mm_ZEISS.pdf'],
+  biogon: ['ZEISS · Biogon 5.6/60 technical data (PDF)', 'https://apollojournals.org/alsj/Biogon5.6_60mm_ZEISS.pdf'],
   polaroid: ['Polaroid · SX-70 series cameras', 'https://support.polaroid.com/hc/en-us/articles/115012463268-Polaroid-SX-70-series-cameras'],
   leica: ['Leitz · 1961 dealer catalogue (PDF, archived by Pacific Rim Camera)', 'https://www.pacificrimcamera.com/rl/03496/03496.pdf'],
   rollei: ['Deutsches Kameramuseum · Rolleiflex 2.8F', 'https://kameramuseum.de/objekte/rollei-rolleiflex-28-f/'],
@@ -30,11 +30,11 @@ export const CAMERA_STORIES = {
     sections: [
       ['Designed for the journey', 'NASA adapted the Hasselblad 500 EL for the lunar environment. The data camera used a special 60 mm ZEISS Biogon lens and a glass réseau plate near the film. Conventional materials and lubricants needed special consideration in a vacuum.'],
       ['The crosses have a purpose', 'The réseau marks provide reference positions across a photograph. They belong at the film plane: in this app, they are drawn into the captured image rather than placed over the live view as decoration.'],
-      ['Learn to aim differently', 'Our historical mode replaces the convenient digital view with an approximate aiming guide. Set the aperture, shutter time, and distance scale before making an exposure. Electric film advance keeps this virtual camera ready for the next frame.']
+      ['Learn to aim differently', 'The historical body is aimed from the chest with no optical finder. Set the aperture, shutter time, and distance scale before making an exposure. Electric film advance keeps this virtual camera ready for the next frame.']
     ],
     specs: [['Design family','Modified Hasselblad 500 EL'],['Mission context','Apollo 17 · 1972'],['Nominal lens','ZEISS Biogon 60 mm f/5.6'],['Configured image area','53 × 53 mm'],['Characteristic feature','Film-plane réseau marks']],
     exercise: 'Compare f/5.6 and f/8 at the same shutter time in historical mode. Then make a frame and look for the réseau crosses in the result.',
-    limitation: 'This is an Apollo-inspired operational model. Aiming, exposure, film response, and optical effects are simplified; the result is not a calibrated reconstruction of lunar photography.',
+    limitation: 'Edge illumination follows the Zeiss data sheet at f/5.6 and f/8. Smaller apertures use the f/8 curve. Film response and the scene light level are estimates.',
     sources: ['nasa','biogon','mission']
   },
   sx70: {
@@ -45,7 +45,7 @@ export const CAMERA_STORIES = {
     sections: [
       ['An instrument that unfolds', 'The original SX-70 combines a folding body with through-the-lens viewing and manual focus. Its chrome-and-brown-leather form is one of the familiar versions of this design. Later Sonar versions added autofocus.'],
       ['A different kind of control', 'Instead of separate manual aperture and shutter controls, this model invites you to focus and use the lighten/darken compensation control. It is a different relationship with exposure: guide the camera rather than set every parameter.'],
-      ['Try the sequence', 'Unfold the camera and insert the modern eight-exposure ISO 160 pack. The ejected image develops outside the camera. You can expose the next sheet immediately. Last frame shows an immediate digital proof.']
+      ['Try the sequence', 'Unfold the camera and insert the modern eight-exposure ISO 160 pack. The ejected image develops outside the camera. You can expose the next sheet immediately. Last frame shows an immediate proof in the integral print mount.']
     ],
     specs: [['Original introduction','1972'],['Viewing system','Single-lens reflex'],['Focus','Manual, original model'],['Film family','SX-70 integral instant film'],['Studio operation','Fold, load, focus, expose, eject']],
     exercise: 'Unfold and load the camera. Make two frames with different lighten/darken settings, keeping the scene fixed between exposures.',
@@ -64,7 +64,7 @@ export const CAMERA_STORIES = {
     ],
     specs: [['Introduced','1959'],['Film format','35 mm'],['Finder','35 / 50 mm bright-line frames'],['Focusing method','Scale focus; no coupled rangefinder'],['Studio lens configuration','Nominal 50 mm']],
     exercise: 'Compare 1 m and infinity in Film preview, then repeat in the historical finder. Make a frame, advance the film, and compare another focus setting.',
-    limitation: 'The capture uses a 36 × 24 mm frame. The historical finder remains clear as the lens focus or film changes. Bright lines are schematic and parallax is approximate. The modern comparison films are compatible examples from later decades.',
+    limitation: 'The capture uses a 36 × 24 mm frame. The historical finder remains clear as the lens focus or film changes. The inner 50 mm bright line frames the exposure. The outer 35 mm line shows more of the scene. Both are centered at the infinity position. The modern comparison films are compatible examples from later decades.',
     sources: ['leica','tmax100','tmax400','trix']
   },
   rolleiflex: {
@@ -74,12 +74,12 @@ export const CAMERA_STORIES = {
     standfirst: 'The Rolleiflex 2.8F belongs to the classic twin-lens reflex tradition. Our collection places it in its early-1960s context.',
     sections: [
       ['Two optical paths', 'The upper lens supplies the viewing image; the lower taking lens exposes the film. The 2.8F features an 80 mm f/2.8 taking lens and a coupled exposure meter. The museum reference documents an example from the early 1960–1966 production period.'],
-      ['The world, reversed', 'The studio mirrors the live or demo view horizontally to suggest the waist-level experience. Move your attention across the frame and notice how that reversal changes your sense of composition. The final photograph is shown in its normal orientation.'],
+      ['The world, reversed', 'Historical mode reverses the waist-level screen. Tap Loupe to magnify the center 2.5×. Move your attention across the frame and notice how that reversal changes your sense of composition. The final photograph is shown in its normal orientation.'],
       ['A measured rhythm', 'Set aperture, shutter time, and focus, then expose. Advance the film before the next frame. Our virtual roll gives you twelve square exposures, with a deliberate manual action between each one.']
     ],
     specs: [['Collection date','c. 1960 · early production context'],['Type','Twin-lens reflex'],['Film','120 roll film · 12 square frames'],['Taking lens','Nominal 80 mm f/2.8'],['Configured image area','56 × 56 mm']],
-    exercise: 'Frame the demo using the reversed finder. Expose and compare the result with the preview. Then advance the film and try again.',
-    limitation: 'Ground glass, parallax, metering, and focus are only partly represented. No measured 80 mm lens response or medium-format film emulsion is simulated.',
+    exercise: 'Select Historical and frame the demo using the reversed finder. Expose and compare the result with the preview. Then advance the film and try again.',
+    limitation: 'Ground glass, parallax, metering, and focus are only partly represented. The stock profile uses published B&W granularity values and the 56 mm film width. The lens shading is an optical approximation.',
     sources: ['rollei','tmax100','tmax400','trix']
   }
 };
@@ -120,8 +120,8 @@ export const CHAPTERS = {
     standfirst:'A camera offers both a recording system and a way to look. Those two views are not always the same.',
     sections:[
       {title:'Focus chooses a distance',text:'Focusing adjusts the lens so a chosen subject distance is sharply imaged. Depth of field extends acceptable sharpness around that distance. In this prototype, distance-based blur assumes a flat ground plane; it cannot infer the actual depth of objects in an imported photograph.',sources:['focus']},
-      {title:'One lens, two lenses, or a separate window',text:'The SX-70 is a single-lens reflex: the taking lens also supplies the view. The Rolleiflex uses a separate viewing lens. The Leica M1 has a separate bright-line finder without a coupled rangefinder. The Apollo-inspired historical view supplies only an approximate aiming guide.',sources:['polaroid','rollei','leica','nasa']},
-      {title:'The crop is part of the picture',text:'The Leica records a 3:2 rectangle. Apollo and Rolleiflex record squares. The modern SX-70 pack uses a 79 × 77 mm image area. The finder and recorded frame use the same center crop, with a mirrored view only while composing on the Rolleiflex.'}
+      {title:'One lens, two lenses, or a separate window',text:'The SX-70 is a single-lens reflex: the taking lens also supplies the view. The Rolleiflex uses a separate viewing lens. The Leica M1 has a separate bright-line finder without a coupled rangefinder. The Apollo body is aimed from the chest.',sources:['polaroid','rollei','leica','nasa']},
+      {title:'The crop is part of the picture',text:'The Leica records a 3:2 rectangle. Apollo and Rolleiflex record squares. The modern SX-70 pack uses a 79 × 77 mm image area. The nominal lens and film dimensions determine the crop. The Leica window shows the scene outside its 50 mm frame. The Rolleiflex ground glass is laterally reversed.'}
     ],exercise:'Switch between the M1 and Rolleiflex before making a frame. Notice the reversed Rolleiflex preview, then compare it with its normally oriented result.',next:'about'
   },
   about: {
@@ -129,9 +129,9 @@ export const CHAPTERS = {
     standfirst:'Camera Archive is an educational prototype. It combines historical control workflows with an openly interpretative image renderer.',
     sections:[
       {title:'Start with what you have',text:'Use the included Fronalpstock landscape, import a photograph, or start your device’s camera. A live camera requires a secure browser context and your permission. The site asks for that permission only when you choose Camera.'},
-      {title:'Two ways to operate',text:'Historical mode gives the Apollo camera a simplified aiming guide. Assisted mode keeps its digital preview available. Both modes record the same exposure. The historical optical finder remains independent of the film response. Each body retains its own film and controls when you switch instruments.'},
+      {title:'Two ways to operate',text:'Historical mode reproduces the absence of an Apollo optical finder. Assisted mode keeps its digital preview available. Both modes record the same exposure. The historical optical finder remains independent of the film response. Each body retains its own film and controls when you switch instruments.'},
       {title:'Evidence and interpretation',text:'Level A means historically documented; Level B means quantitatively calibrated within a stated domain; Level C means an approximation. The collection’s mechanical evidence labels are targets. Current film color, monochrome conversion, and grain are Level C. No camera here has a calibrated end-to-end optical and film model.'},
-      {title:'What the renderer can—and cannot—teach',text:'Aperture, shutter, and focus can change the illustrative output. Focus treats the mountain panorama as distant and approximates other scenes with a flat ground plane. Seeded grain uses film-plane dimensions and output sampling. Exports preserve the film aspect ratio up to 1600 pixels wide. Original film chemistry, measured lens response, real shutter motion blur, and DNG decoding are outside this version.'},
+      {title:'What the renderer can—and cannot—teach',text:'Aperture, shutter, and focus can change the illustrative output. Focus treats the mountain panorama as distant and approximates other scenes with a flat ground plane. Seeded grain uses film-plane dimensions and output sampling. Exports preserve the film aspect ratio up to 1600 pixels wide. Apollo edge illumination follows the published Biogon curves. Film chemistry, lens aberrations and subject motion remain uncalibrated.'},
       {id:'demo-credit',title:'The demonstration photograph',text:'Hannes Röst photographed the Fronalpstock panorama. The bundled JPEG is cropped, resized and recompressed from the original. The simulator crops and processes it for each instrument. The demo image and its rendered derivatives use CC BY-SA 3.0. The metadata export records the author, license and modifications.',sources:['landscape','cc']},
       {title:'Your images stay with you',text:'Capture, import, and rendering happen in your browser. The app has no image upload endpoint, account system, or analytics. Photos are kept in memory, not saved automatically. Export each photograph you want to keep; the browser may offer a share sheet or PNG and metadata downloads.'},
       {title:'A note on the objects',text:'The instrument portraits are original schematic illustrations, not product photographs or exact replicas. Camera and manufacturer names identify historical subjects; they do not imply endorsement. External reading opens third-party sites with their own privacy practices.'}

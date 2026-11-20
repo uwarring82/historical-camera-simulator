@@ -4,6 +4,8 @@
 
 Camera Archive is a browser-based photography studio with four instruments. Each has its own film gate, finder, exposure controls and transport. The studio fits its controls and live finder on one screen. Use the demonstration photograph, import an image or select **Camera** for a live device feed. Captures stay on your device.
 
+On an iPhone 17 Pro, swipe across a dial to adjust it. Rotate to landscape for a side-by-side finder and control panel. For an edge-to-edge session, open the studio in Safari, choose **Share → Add to Home Screen**, enable **Open as Web App**, and launch **Camera Studio**.
+
 Choose **Historical** for the instrument’s optical view or **Film preview** for a digital exposure proof. Select a film to load a fresh roll or magazine. **Last frame** opens a full-size proof with 100% inspection and metadata. **Export** saves the last exposure. Releasing the shutter again replaces the last proof.
 
 | Instrument | Film gate | Controls and loading |

@@ -18,6 +18,24 @@ function printValue(light) {
   const y = light <= shoulder ? light : 1 - (1 - shoulder) * Math.exp(-(light - shoulder) / (1 - shoulder));
   return srgb[Math.round(y * 8192)];
 }
+// Graph readings at 0, 5, ... 40 mm image height, Zeiss data sheet 104800, p. 2.
+const biogon = {
+  'biogon-f5.6':[1,.982,.947,.888,.809,.712,.598,.461,.314],
+  'biogon-f8':[1,.983,.961,.930,.886,.830,.758,.669,.557]
+};
+export function illuminationAt(camera, settings, radiusSquared) {
+  const curve = camera.id === 'apollo' && biogon[settings.illuminationProfile];
+  if (curve) {
+    const cornerMm = Math.hypot(camera.frameMm, camera.frameHeightMm) / 2;
+    const bin = Math.min(curve.length-1, Math.sqrt(radiusSquared) * cornerMm / 5);
+    const index = Math.floor(bin), fraction = bin - index;
+    return curve[index] + fraction * (curve[Math.min(index+1,curve.length-1)]-curve[index]);
+  }
+  const oldLoss = Math.min(.99, Math.max(0, (settings.vignette ?? 0) / 100));
+  const slope = settings.cornerSlopeSquared ?? (1 / Math.sqrt(1-oldLoss) - 1);
+  return 1 / (1 + slope*radiusSquared) ** 2;
+}
+
 const clamp8 = n => n < 0 ? 0 : n > 255 ? 255 : n;
 export function xorshift32(seed) {
   let s = (seed >>> 0) || 0x6d2b79f5;
@@ -39,13 +57,14 @@ export function renderReference({ data, width, height }, cameraId, settings = {}
   const grainScale = Math.max(0, Math.min(2, (settings.grain ?? 100) / 100));
   const warmth = settings.renderMode === 'creative' ? Math.max(-50, Math.min(50, settings.warmth || 0)) : 0;
   const gain = 2 ** (settings.exposureStops ?? 0);
-  const falloff = Math.min(1, Math.max(0, (settings.vignette ?? 0) / 100));
+  const illumination = Float32Array.from({length:1025}, (_,i) => gain * illuminationAt(camera,settings,i/1024));
   const cx = (width - 1) / 2, cy = (height - 1) / 2;
   const radius2 = cx * cx + cy * cy || 1;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const i = 4 * (y * width + x);
-      const light = gain * (1 - falloff * ((x - cx) ** 2 + (y - cy) ** 2) / radius2);
+      const r2 = ((x - cx) ** 2 + (y - cy) ** 2) / radius2;
+      const light = illumination[Math.round(1024 * r2)];
       let r = linear[out[i]], g = linear[out[i+1]], b = linear[out[i+2]];
       if (film.color === 'bw') {
         r = g = b = 0.2126*r + 0.7152*g + 0.0722*b;

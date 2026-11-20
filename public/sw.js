@@ -1,6 +1,6 @@
 /* Same-origin app shell caching only. No user photos, imported files or external sites. */
-const CACHE = 'camera-archive-v0.3.0';
-const SHELL = ['./','./index.html','./studio.html','./learn.html','./styles.css','./studio.css','./src/film.mjs','./manifest.webmanifest','./icons/icon.svg','./icons/apple-touch-icon.png','./demo-scene.jpg','./src/app.mjs','./src/entrance.mjs','./src/learn.mjs','./src/guide.mjs','./src/illustrations.mjs','./src/site.mjs','./src/cameras.mjs','./src/exposure.mjs','./src/capture.mjs','./src/metadata.mjs','./src/render.mjs','./src/reseau.mjs','./src/state.mjs'];
+const CACHE = 'camera-archive-studio-4';
+const SHELL = ['./','./index.html','./studio.html','./learn.html','./styles.css','./studio.css','./src/film.mjs','./manifest.webmanifest','./studio.webmanifest','./icons/icon.svg','./icons/apple-touch-icon.png','./demo-scene.jpg','./src/app.mjs','./src/entrance.mjs','./src/learn.mjs','./src/guide.mjs','./src/illustrations.mjs','./src/site.mjs','./src/cameras.mjs','./src/exposure.mjs','./src/capture.mjs','./src/metadata.mjs','./src/render.mjs','./src/reseau.mjs','./src/state.mjs'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch', event => {

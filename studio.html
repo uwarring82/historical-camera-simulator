@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#eeece5"><meta name="description" content="A four-camera photographic workbench with optical finders and film-stock simulation.">
-  <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./studio.webmanifest"><link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"><link rel="stylesheet" href="./studio.css">
   <title>The studio · Camera Archive</title>
 </head>
@@ -29,7 +29,8 @@
               <div class="eyecup"><div id="media-stage">
                 <img id="demo-image" src="./demo-scene.jpg" alt="Mountain panorama at Fronalpstock"><video id="live-video" playsinline muted autoplay aria-label="Live camera"></video>
                 <canvas id="proof" aria-label="Simulated film preview"></canvas>
-                <div id="finder-lines" aria-hidden="true"></div><span id="blind-label" hidden></span>
+                <div id="finder-lines" aria-hidden="true"><i></i><b></b></div>
+                <button id="loupe" type="button" aria-label="Focusing magnifier" aria-pressed="false" hidden><span>Loupe</span></button><span id="blind-label" hidden></span>
               </div></div>
             </div>
             <div class="view-foot"><span id="viewport-label">Film preview</span><output id="preview-ev" title="Relative exposure at the film speed"></output></div>
@@ -67,7 +68,9 @@
     </section>
   </main>
   <dialog id="print-dialog"><header><h2 id="print-title">Last frame</h2><button type="button" id="close-print">Close</button></header>
-    <p id="print-settings"></p><div id="print-mat"><img id="print-image" alt="Last exposed photograph"></div>
+    <p id="print-settings"></p><div id="print-mat"><div class="print-sheet"><img id="print-image" alt="Last exposed photograph"></div></div>
     <button type="button" id="zoom-print" aria-pressed="false">Inspect at 100%</button> <button type="button" id="save-metadata">Save metadata</button></dialog>
+  <dialog id="screen-help" aria-labelledby="screen-title"><header><h2 id="screen-title">Full-screen studio</h2><button type="button" id="close-screen-help">Close</button></header>
+    <p>On iPhone, open this studio in Safari, tap Share, then Add to Home Screen. Turn on Open as Web App and tap Add. The studio icon opens directly to the controls.</p></dialog>
   <script type="module" src="./src/app.mjs"></script>
 </body></html>

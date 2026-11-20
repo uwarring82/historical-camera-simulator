@@ -1,0 +1,23 @@
+{
+  "name": "Camera Archive Studio",
+  "short_name": "Camera Studio",
+  "description": "An experimental instrument simulator for historical cameras.",
+  "start_url": "./studio.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f4f0",
+  "theme_color": "#f5f4f0",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "./icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "id": "./studio.html"
+}

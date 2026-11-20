@@ -30,7 +30,7 @@
       "camera": "apollo",
       "property": "lens MTF, vignetting, distortion",
       "evidenceTarget": "B",
-      "implementation": "not started",
+      "implementation": "Relative illuminance interpolated from Zeiss f/5.6 and f/8 curves. Smaller apertures use f/8. No MTF or distortion fit.",
       "validated": false,
       "sourceRefs": [
         "zeiss-biogon"
@@ -82,7 +82,7 @@
   ],
   "sources": {
     "alsj-reseau": "https://www.apollojournals.org/alsj/alsj-reseau.html",
-    "zeiss-biogon": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/Biogon5.6_60mm_ZEISS.pdf",
+    "zeiss-biogon": "https://apollojournals.org/alsj/Biogon5.6_60mm_ZEISS.pdf",
     "nasa-apollo17": "https://eol.jsc.nasa.gov/searchphotos/Metadata/Apollo17.htm",
     "leica-m1": "https://leicahistorica.com/M1.html",
     "rolleiflex-28f": "https://kameramuseum.de/objekte/rollei-rolleiflex-28-f/",

@@ -2,7 +2,7 @@ import { CAMERA_ORDER, getCamera } from './cameras.mjs';
 import { FILMS, FILM_OPTIONS, filmSpeedLabel } from './film.mjs';
 import { newCameraState, updateCamera, canExpose, cameraStatus } from './state.mjs';
 import { renderReference, depthBlur } from './render.mjs';
-import { CaptureAdapter, imageFromFile, sourceToFrame, frameSize } from './capture.mjs';
+import { CaptureAdapter, imageFromFile, sourceToFrame, frameSize, viewGeometry } from './capture.mjs';
 import { cameraRenderParams, meterStops, settingsSummary, dofParams } from './exposure.mjs';
 import { photographMetadata, downloadBlob } from './metadata.mjs';
 import { cameraArtwork } from './illustrations.mjs';
@@ -14,6 +14,7 @@ const requested = new URLSearchParams(location.search).get('camera');
 let id = CAMERA_ORDER.includes(requested) ? requested : 'apollo';
 let source = 'demo', imported = null, sourceRequest = 0, sourceLabel = '';
 let proofTimer = 0, captured = null, busy = false, serial = 0, printUrl = '';
+let loupeRaised = false, liveLimit = 360;
 const capture = new CaptureAdapter($('live-video'));
 const proofBuffer = document.createElement('canvas');
 const meterBuffer = document.createElement('canvas');
@@ -97,7 +98,8 @@ function cameraControls() {
 function settings(seed, media = inputSource()) {
   const simulated = cameraRenderParams(id,state());
   if (id === 'sx70' && media && (source === 'demo' ? media.naturalWidth : media.videoWidth || media.width)) {
-    simulated.autoMeterStops = meterStops(sourceToFrame(media,32,32,meterBuffer));
+    const crop = viewGeometry(getCamera(id), media.videoWidth || media.naturalWidth || media.width, media.videoHeight || media.naturalHeight || media.height);
+    simulated.autoMeterStops = meterStops(sourceToFrame(media,32,32,crop,meterBuffer));
     simulated.exposureStops += simulated.autoMeterStops;
   }
   const creative = $('render-mode').value === 'creative';
@@ -121,30 +123,49 @@ function paintFinder() {
   const media = inputSource(), proof = $('proof');
   if (source === 'demo' && !media.naturalWidth || source === 'live' && !media.videoWidth) return;
   const camera = getCamera(id);
-  const limit = Math.min(420, Math.max(80, Math.round($('media-stage').clientWidth * devicePixelRatio)));
-  const size = frameSize(camera, media.videoWidth || media.naturalWidth || media.width,
-    media.videoHeight || media.naturalHeight || media.height, limit);
-  const frame = sourceToFrame(media,size.width,size.height,proofBuffer);
+  const started = performance.now();
+  const historical = $('operation-mode').value === 'historical';
+  const magnification = historical && id === 'rolleiflex' && loupeRaised ? 2.5 : 1;
+  const view = {historical,magnification};
+  const iw = media.videoWidth || media.naturalWidth || media.width;
+  const ih = media.videoHeight || media.naturalHeight || media.height;
+  const displayPixels = Math.max(80, Math.round($('media-stage').clientWidth * devicePixelRatio));
+  const limit = Math.min(source === 'live' ? liveLimit : 540, displayPixels);
+  const size = frameSize(camera, iw, ih, limit, view);
+  const frame = sourceToFrame(media,size.width,size.height,viewGeometry(camera,iw,ih,view),proofBuffer);
   const rendering = settings(0x172017);
   setExposureDisplay(rendering.exposureStops);
   let pixels = frame;
-  if ($('operation-mode').value === 'assisted') {
+  if (!historical) {
     pixels = renderReference(frame,id,{...rendering,proof:true});
   } else if (id === 'sx70' || id === 'rolleiflex') {
     // The Rolleiflex viewing lens stays open as the taking aperture changes.
     const dof = dofParams(camera,{...state(),aperture:id==='rolleiflex'?'f/2.8':'f/8'});
     dof.distantScene = source==='demo';
+    dof.magnification = magnification;
     depthBlur(pixels.data,size.width,size.height,dof);
   }
   if (proof.width !== size.width) proof.width = size.width;
   if (proof.height !== size.height) proof.height = size.height;
   proof.getContext('2d').putImageData(new ImageData(pixels.data,size.width,size.height),0,0);
-  if (source === 'live') proofTimer = setTimeout(paintFinder,120);
+  if (source === 'live') {
+    // A slow device can lower finder sampling. Capture always uses the full gate.
+    const elapsed = performance.now() - started;
+    if (elapsed > 35) liveLimit = Math.max(144, Math.round(limit * 0.82));
+    else if (elapsed < 17) liveLimit = Math.min(540, liveLimit + 16);
+    proofTimer = setTimeout(paintFinder, Math.max(12, 85 - elapsed));
+  }
 }
 function refreshFinder() {
   const stage = $('media-stage'), c = getCamera(id), assisted = $('operation-mode').value === 'assisted';
   stage.style.setProperty('--aspect',c.frameMm+'/'+c.frameHeightMm);
   stage.dataset.finder = id;
+  stage.dataset.view = assisted ? 'proof' : 'optical';
+  $('loupe').hidden = assisted || id !== 'rolleiflex';
+  $('loupe').setAttribute('aria-pressed',String(loupeRaised));
+  $('loupe').title = loupeRaised ? 'Lower focusing magnifier' : 'Raise focusing magnifier';
+  $('loupe').firstElementChild.textContent = loupeRaised ? '2.5×' : 'Loupe';
+  stage.dataset.loupe = String(!$('loupe').hidden && loupeRaised);
   $('proof').setAttribute('aria-label',assisted?'Simulated film preview':finders[id]);
   const reason = blindReason();
   $('blind-label').textContent = reason; $('blind-label').hidden = !reason;
@@ -201,12 +222,13 @@ async function expose() {
     const renderSettings = settings(0x172017 + serial + 1, media);
     const iw = media.naturalWidth || media.width, ih = media.naturalHeight || media.height;
     const c = getCamera(body), {width,height} = frameSize(c,iw,ih);
-    const result = renderReference(sourceToFrame(media,width,height),body,renderSettings);
+    const crop = viewGeometry(c,iw,ih);
+    const result = renderReference(sourceToFrame(media,width,height,crop),body,renderSettings);
     const canvas = document.createElement('canvas');canvas.width=width;canvas.height=height;
     canvas.getContext('2d').putImageData(new ImageData(result.data,width,height),0,0);
     const after = updateCamera(before,{type:'expose'});
     const provenance = {method:acquired?.method || input, sourceWidth:iw,sourceHeight:ih,outputWidth:width,outputHeight:height,
-      calibration:'relative',imageInput:input,lens:input==='live'?sourceLabel:null};
+      crop, projection:'relative-rectilinear', calibration:'relative',imageInput:input,lens:input==='live'?sourceLabel:null};
     if (input === 'demo') provenance.attribution = {
       title:'Fronalpstock big', creator:'Hannes Röst', source:'https://commons.wikimedia.org/wiki/File:Fronalpstock_big.jpg',
       license:'CC BY-SA 3.0', licenseUrl:'https://creativecommons.org/licenses/by-sa/3.0/', changes:'Resized, cropped and rendered through the selected film model.'
@@ -266,6 +288,7 @@ $('import-file').onchange=async e=>{
     capture.stop();releaseImport();imported=bitmap;source='import';message('Imported '+bitmap.width+' × '+bitmap.height+' px.');update();
   }catch(err){if(request===sourceRequest)message(err.message,true);}
 };
+$('loupe').onclick=()=>{loupeRaised=!loupeRaised;refreshFinder();};
 $('shutter').onclick=expose;$('export').onclick=exportPhoto;
 $('film-stock').onchange=e=>{apply({type:'change-film',filmId:e.target.value});message('Fresh '+format[id].toLowerCase()+' loaded.');};
 $('render-mode').onchange=update;$('operation-mode').onchange=refreshFinder;
@@ -275,6 +298,7 @@ $('review').onclick=async()=>{
   try {
     const png=await pngOf(frame);if(printUrl)URL.revokeObjectURL(printUrl);printUrl=URL.createObjectURL(png);
     $('print-title').textContent=frame.title;$('print-settings').textContent=frame.metadata.film.name+' · '+frame.metadata.simulation.settings.summary;
+    $('print-mat').dataset.camera=frame.metadata.camera.id;
     $('print-image').src=printUrl;$('print-mat').classList.remove('zoom');$('zoom-print').setAttribute('aria-pressed','false');
     $('print-dialog').showModal();
   }catch(err){message(err.message,true);}
@@ -284,22 +308,27 @@ $('close-print').onclick=()=>$('print-dialog').close();
 $('save-metadata').onclick=()=>{if(captured)downloadBlob(metadataBlob(captured),captured.filename+'.json');};
 $('print-dialog').onclose=()=>{if(printUrl)URL.revokeObjectURL(printUrl);printUrl='';};
 const fs=$('fullscreen');
+const standalone = matchMedia('(display-mode: standalone)');
 function screenState() {
-  const active=Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.body.classList.contains('expanded'));
-  fs.setAttribute('aria-pressed',String(active));fs.textContent=active?'Exit full screen':'⛶ Full screen';
+  const active = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+  fs.hidden = standalone.matches || navigator.standalone === true;
+  fs.setAttribute('aria-pressed',String(active));
+  fs.textContent = active ? 'Exit full screen' : 'Full screen';
 }
-fs.onclick=async()=>{
-  const root=document.documentElement;
+fs.onclick = async () => {
+  const root = document.documentElement;
   try {
-    if(document.fullscreenElement)await document.exitFullscreen();
-    else if(document.webkitFullscreenElement)document.webkitExitFullscreen();
-    else if(document.fullscreenEnabled)await root.requestFullscreen();
-    else if(document.webkitFullscreenEnabled)root.webkitRequestFullscreen();
-    else document.body.classList.toggle('expanded');
-  }catch{document.body.classList.toggle('expanded');}
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
+    else if (document.fullscreenEnabled) await root.requestFullscreen();
+    else if (document.webkitFullscreenEnabled) root.webkitRequestFullscreen();
+    else $('screen-help').showModal();
+  } catch { $('screen-help').showModal(); }
   screenState();
 };
+$('close-screen-help').onclick = () => $('screen-help').close();
 document.addEventListener('fullscreenchange',screenState);document.addEventListener('webkitfullscreenchange',screenState);
+standalone.addEventListener('change',screenState);screenState();
 new ResizeObserver(()=>refreshFinder()).observe($('media-stage'));
 document.addEventListener('visibilitychange',refreshFinder);
 window.addEventListener('pagehide',()=>{sourceRequest++;capture.stop();if(source==='live')source='demo';clearTimeout(proofTimer);});

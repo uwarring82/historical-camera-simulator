@@ -4,7 +4,7 @@ import { FILMS, grainFootprint, densityNoise } from '../src/film.mjs';
 import { xorshift32, renderReference } from '../src/render.mjs';
 import { cameraRenderParams, meterStops } from '../src/exposure.mjs';
 import { getCamera } from '../src/cameras.mjs';
-import { frameSize } from '../src/capture.mjs';
+import { frameSize, viewGeometry } from '../src/capture.mjs';
 import { newCameraState, updateCamera } from '../src/state.mjs';
 
 test('speed and time compensate exactly, including in rendered midtones', () => {
@@ -54,9 +54,22 @@ test('reflected-light metering and the compensation wheel have distinct effects'
 });
 
 test('output fits the source and uses the individual film gates', () => {
-  for(const [id,expected] of [['leica',[1200,800]],['apollo',[900,900]],['rolleiflex',[900,900]],['sx70',[923,900]]]) {
-    const {width,height} = frameSize(getCamera(id),1200,900);
-    assert.deepEqual([width,height],expected);
+  for (const [iw,ih] of [[1200,900],[960,1500],[3200,900]]) {
+    const images = {};
+    for (const id of ['apollo','leica','rolleiflex','sx70']) {
+      const c = getCamera(id), crop = viewGeometry(c,iw,ih);
+      images[id] = crop.width;
+      assert.ok(crop.x >= -1e-8 && crop.y >= -1e-8);
+      assert.ok(Math.abs(2*crop.x + crop.width - iw) < 1e-8);
+      const output = frameSize(c,iw,ih,420);
+      assert.ok(output.width <= 420 && output.width <= Math.ceil(crop.width));
+      assert.ok(Math.abs(output.height - output.width*c.frameHeightMm/c.frameMm) < 1);
+    }
+    assert.ok(Math.abs(images.apollo / images.rolleiflex - (53/60)/(56/80)) < 1e-9);
+    const leica = getCamera('leica'), window = viewGeometry(leica,iw,ih,{historical:true});
+    assert.ok(Math.abs(images.leica/window.width - (35/50)/1.08) < 1e-9);
+    const loupe = viewGeometry(getCamera('rolleiflex'),iw,ih,{historical:true,magnification:2.5});
+    assert.ok(Math.abs(loupe.width*2.5 - images.rolleiflex) < 1e-9);
   }
 });
 
