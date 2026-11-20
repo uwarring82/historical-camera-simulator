@@ -1,19 +1,20 @@
+import { filmFor } from './film.mjs';
 import { getCamera } from './cameras.mjs';
 export function photographMetadata(cameraId, state, settings, provenance) {
   const c = getCamera(cameraId);
   return {
-    schemaVersion: 1,
-    application: 'Historical Camera Simulator (research starter)',
+    schemaVersion: 2,
+    application: 'Camera Archive',
     createdAt: new Date().toISOString(),
-    camera: { id: cameraId, name: c.name, year: c.year, nominalFocalMm: c.nominalFocalMm, frameMm: c.frameMm },
-    film: c.film,
+    camera: { id: cameraId, name: c.name, year: c.year, nominalFocalMm: c.nominalFocalMm, frameMm: c.frameMm, frameHeightMm: c.frameHeightMm },
+    film: { id: settings.filmId, ...filmFor(cameraId, settings.filmId) },
     simulation: {
       classification: 'C', rationale: 'Phenomenological film/color/grain; no calibrated photographic reconstruction',
-      referenceRenderer: 'integer-rgba-v0.1', settings: { ...settings },
+      referenceRenderer: 'film-density-v0.3', settings: { ...settings },
       cameraState: { ...state }
     },
     acquisition: { ...provenance },
-    rights: 'User retains responsibility for rights in imported images and exports.',
+    rights: provenance.attribution ? 'Demo derivative. CC BY-SA 3.0. See acquisition.attribution.' : 'User retains responsibility for rights in imported images and exports.',
     privacy: 'Rendered locally. No network upload is performed by the application.'
   };
 }

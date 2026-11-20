@@ -1,38 +1,30 @@
-# Camera Archive — Historical Camera Simulator
+# Camera Archive
 
-**Repository startup package v0.1.0 | 11 November 2026**
+[Open the studio](https://uwarring82.github.io/historical-camera-simulator/studio.html) · [Explore the collection](https://uwarring82.github.io/historical-camera-simulator/) · [Film model and evidence](docs/film-model.md)
 
-An iPhone-first, local-only starter web application for four historical cameras: **Apollo 17 Hasselblad**, **Polaroid SX-70**, **Leica M1**, and **Rolleiflex 2.8F**. Includes an interactive control workbench, a deliberately simplified Level-C image transform, NASA-inspired film-plane réseau crosses, PNG + JSON exports, and CI/testing infrastructure.
+Camera Archive is a browser-based photography studio with four instruments. Each has its own film gate, finder, exposure controls and transport. The studio fits its controls and live finder on one screen. Use the demonstration photograph, import an image or select **Camera** for a live device feed. Captures stay on your device.
 
-> **Status: research starter, NOT a validated historic optics/film simulator.** Apollo and SX-70 are the first architecture test cases. All four are selectable; their mechanical states are simplified. The present renderer is intentionally phenomenological, not calibrated. There is no DNG decoder, optical MTF convolution, measured film characteristic curve, live grain preview, genuine instant-film kinetics or calibrated focus/exposure control yet.
+Choose **Historical** for the instrument’s optical view or **Film preview** for a digital exposure proof. Select a film to load a fresh roll or magazine. **Last frame** opens a full-size proof with 100% inspection and metadata. **Export** saves the last exposure. Releasing the shutter again replaces the last proof.
 
-## Start on your Mac
+| Instrument | Film gate | Controls and loading |
+| --- | --- | --- |
+| Apollo 17 Hasselblad | 53 × 53 mm | Aperture, timed shutter, distance scale, removable magazine and electric advance |
+| Polaroid SX-70 | 79 × 77 mm | Fold, insert a modern eight-exposure pack, focus, lighten/darken and eject |
+| Leica M1 | 36 × 24 mm | Aperture, shutter, scale focus and 36-frame manual advance |
+| Rolleiflex 2.8F | 56 × 56 mm | Aperture, shutter, focus, reversed waist-level finder and 12-frame manual advance |
 
-Prerequisite: Node.js **22 or newer**. No npm dependencies are required by the core starter.
+## Run locally
+
+Use Node.js 22 or newer. The core application has no npm dependencies.
 
 ```sh
-unzip historical-camera-simulator-startup-v0.1.0.zip
+git clone https://github.com/uwarring82/historical-camera-simulator.git
 cd historical-camera-simulator
-npm ci
 npm run check
 npm run dev
 ```
 
-Open **http://localhost:5173** on the Mac. Choose a camera, leave the source as the included synthetic demonstration landscape, prepare any required controls, press the shutter, and export the PNG + JSON files. You can also import a photograph without enabling the camera.
-
-To initialize your own Git repository after unpacking:
-
-```sh
-git init -b main
-git add .
-git commit -m "Initial historical camera simulator starter"
-```
-
-### Use on an iPhone
-
-Safari camera access needs a **secure context (HTTPS)** except for localhost on the device itself. `http://<your-Mac-IP>:5173` is **not sufficient** for iPhone camera access. To use the web camera, deploy the built static site (`dist/`) behind HTTPS. A manual GitHub Pages workflow is included; configure the repository's Pages source to **GitHub Actions** and explicitly run `Publish reviewed public preview` only after checking rights and privacy. Then open the HTTPS site in Safari and optionally **Add to Home Screen**.
-
-The webpage requests camera permission only when **Start camera** is pressed. Captures and imports are processed in the browser; no upload endpoint, user tracking, or analytics are implemented. Images are **not automatically saved**; use **Export PNG + JSON** immediately. Two downloads can require separate confirmation on iOS.
+Open http://localhost:5173 on the same computer. Use the HTTPS studio for a phone camera. **Full screen** uses the browser’s fullscreen API where available and a compact layout elsewhere.
 
 ## Commands
 
@@ -60,26 +52,9 @@ tests/                   Unit invariants, seed regression, optional Playwright s
 docs/                    White paper, CI handbook, Phase-0 protocols, fidelity/rights
 ```
 
-## Scientific scope and caveats
+## Scientific scope
 
-1. **Historical mechanics:** reference-supported design targets; simplified control ranges until every variant is verified.
-2. **Apollo geometry:** 53 × 53 mm negative, 54 × 54 mm réseau plate, nominal 10 mm cross spacing, 1 mm arms and 0.02 mm width, doubled center. Marks are applied after optical processing (no modeled lens distortion yet) and before film stylization.
-3. **Output model:** integer RGBA color mixing and independent pixel grain; deterministic in the specified reference path but **not** a physical film model or spatially correlated photographic grain.
-4. **Capture:** prefers `ImageCapture.takePhoto()`, falls back to `grabFrame()`, then video canvas. Device-specific dimensions, support and color management must be measured on actual iPhones. Import may be higher-quality. DNG is **not** decoded by this starter.
-5. **Image size:** final square output limited to 1600 px and input dimensions, regardless of hardware resolution; chosen to constrain mobile CPU cost pending characterization.
-6. **Operational modes:** historical/assisted operation and evidence-led/creative rendering are independent controls, but historical viewing behavior is only partially represented; the evidence-led label **does not** imply a calibrated image.
-7. **Scientific calibration:** not yet implemented. See [Phase 0](docs/phase-0-protocol.md) and [fidelity register](docs/fidelity-register.json).
-
-## First issues to open
-
-- P0: measure real-iPhone `takePhoto()` vs `grabFrame()` output, metadata and color response.
-- P0: prespecified grayscale context test and slanted-edge effective SFR test.
-- Implement optical response after source-resolution characterization, not before.
-- Implement physically scaled, correlated grain and calibrated tone pipeline.
-- Complete Apollo camera semantics and SX-70 exposure/development before stabilizing schema.
-- Integrate rights-checked reference imagery and archival source tracing.
-- Decide a maintainable TypeScript/Vite migration after validating the capture/render pipeline.
-- Install and lock Playwright once the environment has registry access; run tests in real mobile Safari.
+Sensitivity acts on relative linear-light exposure. Stock-specific RMS density variation, the assumed correlation scale, frame width and pixel sampling determine visible grain. Kodak’s B&W granularity values anchor the model at a 48 µm measuring aperture. Historical color, instant-film texture and the spatial correlation lengths are estimates. Camera state, film profile and seed are recorded at exposure time. See the [model, assumptions and numerical tests](docs/film-model.md).
 
 ## Further reading
 
@@ -92,7 +67,7 @@ docs/                    White paper, CI handbook, Phase-0 protocols, fidelity/r
 
 ## License
 
-Original code and interface artwork in this starter: **MIT** (see `LICENSE`). Historical names and third-party trademarks remain those of their owners. The source links provided in documents are citations, **not** relicensed material. No historical manufacturer photographs or NASA image files are bundled.
+Original code and interface artwork use the **MIT** license. The bundled Fronalpstock photograph by Hannes Röst and its derivatives use **CC BY-SA 3.0**. See the [asset register](docs/asset-register.md). Historical names and third-party trademarks remain those of their owners. The source links provided in documents are citations, **not** relicensed material. No historical manufacturer photographs or NASA image files are bundled.
 
 ## The entrance, field guide, and studio
 

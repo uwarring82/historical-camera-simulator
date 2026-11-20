@@ -1,6 +1,6 @@
 # ADR 0002 — Integer reference image transformation
 
-**Status: accepted for starter.**
+**Status: historical decision for v0.1.** The [v0.3 film-density renderer](../film-model.md) supersedes the integer-only path.
 
 ## Decision
 

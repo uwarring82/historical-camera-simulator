@@ -1,266 +1,307 @@
 import { CAMERA_ORDER, getCamera } from './cameras.mjs';
+import { FILMS, FILM_OPTIONS, filmSpeedLabel } from './film.mjs';
 import { newCameraState, updateCamera, canExpose, cameraStatus } from './state.mjs';
-import { renderReference } from './render.mjs';
-import { CaptureAdapter, imageFromFile, imageFromUrl, sourceToFrame } from './capture.mjs';
-import { cameraRenderParams, settingsSummary, dofParams, rowBlurRadius, HORIZON } from './exposure.mjs';
+import { renderReference, depthBlur } from './render.mjs';
+import { CaptureAdapter, imageFromFile, sourceToFrame, frameSize } from './capture.mjs';
+import { cameraRenderParams, meterStops, settingsSummary, dofParams } from './exposure.mjs';
 import { photographMetadata, downloadBlob } from './metadata.mjs';
 import { cameraArtwork } from './illustrations.mjs';
 import './site.mjs';
 
 const $ = id => document.getElementById(id);
-const requestedCamera = new URLSearchParams(location.search).get('camera');
-let cameraId = CAMERA_ORDER.includes(requestedCamera) ? requestedCamera : 'apollo';
-let state = newCameraState(cameraId);
-let photo = null;
-let provenance = { method: 'demo', sourceWidth: null, sourceHeight: null };
-let activeSource = null;
-let usingLive = false;
-let sourceSelection = 'demo';
-let exposureCount = 0;
+const bodies = Object.fromEntries(CAMERA_ORDER.map(id => [id, newCameraState(id)]));
+const requested = new URLSearchParams(location.search).get('camera');
+let id = CAMERA_ORDER.includes(requested) ? requested : 'apollo';
+let source = 'demo', imported = null, sourceRequest = 0, sourceLabel = '';
+let proofTimer = 0, captured = null, busy = false, serial = 0, printUrl = '';
 const capture = new CaptureAdapter($('live-video'));
-const seed = 0x172017;
+const proofBuffer = document.createElement('canvas');
+const meterBuffer = document.createElement('canvas');
+const finders = {apollo:'Chest-level aiming', leica:'Bright-line finder', rolleiflex:'Waist-level finder', sx70:'Reflex finder'};
+const format = {apollo:'70 mm magazine', leica:'35 mm roll', rolleiflex:'120 roll', sx70:'Integral pack'};
+const state = () => bodies[id];
+const film = () => FILMS[state().filmId];
+const inputSource = () => source === 'live' ? $('live-video') : source === 'import' ? imported : $('demo-image');
+const el = (tag, text = '') => Object.assign(document.createElement(tag), {textContent:text});
 
-function message(text, error = false) { $('feedback').textContent = text; $('feedback').classList.toggle('error', error); }
-function closeSource() { if (activeSource?.close) activeSource.close(); activeSource = null; }
-function element(tag, options = {}) { const el = document.createElement(tag); for (const [k,v] of Object.entries(options)) { if (k === 'text') el.textContent = v; else el.setAttribute(k, v); } return el; }
-function optionButton(camera) {
-  const button = element('button', {type:'button', class:'camera-option', 'data-camera':camera.id, 'aria-pressed': String(camera.id === cameraId)});
-  button.innerHTML = `<span class="camera-thumb">${cameraArtwork(camera.id, 'selector-' + camera.id)}</span><span><span class="year">${camera.year}</span><strong>${camera.short}</strong><small>${camera.subtitle}</small></span><span class="active-indicator" aria-hidden="true">${camera.id === cameraId ? '●' : '○'}</span>`;
-  button.addEventListener('click', () => setCamera(camera.id));
-  return button;
+function message(text, error = false) {
+  $('feedback').textContent = text;
+  $('feedback').classList.toggle('error',error);
 }
-function populateCameras() {
-  const host = $('camera-options'); host.replaceChildren();
-  CAMERA_ORDER.forEach(id => host.append(optionButton(getCamera(id))));
+function apply(action, redraw = true) {
+  bodies[id] = updateCamera(state(), action);
+  if (redraw) update();
+  else refreshFinder();
 }
-function setCamera(id) {
-  cameraId = id; state = newCameraState(id); photo = null;
-  const url = new URL(location.href); url.searchParams.set('camera', id); history.replaceState(null, '', url);
-  $('photo-canvas').style.display = 'none'; $('export').disabled = true;
-  for (const button of $('camera-options').children) {
-    const active = button.dataset.camera === id;
-    button.setAttribute('aria-pressed', String(active));
-    button.querySelector('.active-indicator').textContent = active ? '●' : '○';
+function makeAction(host, label, title, action, disabled = false, pressed) {
+  const group = el('fieldset'), button = el('button', title);
+  group.className = 'mechanical-group mechanical-action';
+  group.append(el('legend',label), button);
+  button.className = pressed === undefined ? 'hardware-action' : 'magazine-switch';
+  button.type = 'button'; button.disabled = disabled; button.dataset.key = action.type;
+  if (pressed !== undefined) {
+    button.setAttribute('aria-label','Film magazine loaded');
+    button.setAttribute('aria-pressed', String(pressed));
   }
-  redrawControls(); redrawPreview();
-  message(`${getCamera(id).name} selected. Film and lens characteristics are currently phenomenological.`);
+  button.onclick = () => {
+    apply(action);
+    host.querySelector('[data-key="' + action.type + '"]:not(:disabled)')?.focus({preventScroll:true});
+  };
+  host.append(group);
 }
-function setState(action) {
-  const focused = document.activeElement?.dataset.focusKey;
-  try {
-    state = updateCamera(state, action); redrawControls(); redrawPreview();
-    if (focused) $('mechanical-controls').querySelector(`[data-focus-key="${focused}"]`)?.focus({preventScroll:true});
+function makeDial(host, label, key, values) {
+  const group = el('fieldset'), hardware = el('div'), knob = el('div'), pointer = el('span'), value = el('span');
+  group.className = 'mechanical-group'; group.dataset.control = key;
+  hardware.className = 'dial-hardware'; hardware.setAttribute('aria-hidden','true');
+  knob.className = 'dial-knob'; pointer.className = 'dial-pointer'; value.className = 'dial-value';
+  hardware.append(knob); knob.append(pointer,value);
+  const adjust = el('div'), range = el('input'), minus = el('button','−'), plus = el('button','+');
+  adjust.className = 'dial-adjust';
+  Object.assign(range,{type:'range', min:0, max:values.length-1, step:1, value:values.indexOf(state()[key]), id:'control-'+key});
+  range.setAttribute('aria-label',label);
+  for (const [button,word,step] of [[minus,'Decrease',-1],[plus,'Increase',1]]) {
+    button.type = 'button'; button.setAttribute('aria-label',word+' '+label.toLowerCase());
+    button.onclick = () => { range.value = Number(range.value) + step; change(); };
   }
-  catch (e) { message(e.message, true); }
-}
-function controlSelect(host, label, key, values) {
-  const group = element('fieldset', {class:'mechanical-group', 'data-control':key});
-  group.append(element('legend', {text:label}));
-  if (key === 'magazine') {
-    const loaded = state.magazine === 'loaded';
-    const toggle = element('button', {type:'button',class:'magazine-switch','aria-label':'Film magazine loaded','aria-pressed':String(loaded),'data-focus-key':'magazine'});
-    toggle.append(element('span', {'aria-hidden':'true'}));
-    toggle.addEventListener('click', () => setState({type:'set',key,value:loaded ? 'removed' : 'loaded'}));
-    group.append(toggle, element('span', {class:'magazine-description',text:loaded ? 'Magazine engaged' : 'Magazine removed'}));
-    host.append(group); return;
-  }
-  const units = {aperture:'F / STOP',shutter:'SECONDS',focus:'DISTANCE',compensation:'LIGHT / DARK'};
-  const hardware = element('div', {class:'dial-hardware','aria-hidden':'true'});
-  const knob = element('div', {class:'dial-knob'});
-  const pointer = element('span', {class:'dial-pointer'});
-  const readout = element('span', {class:'dial-value'});
-  knob.append(pointer, readout); hardware.append(knob);
-  const scale = element('div', {class:'dial-scale','aria-hidden':'true'});
-  values.forEach(value => scale.append(element('span', {text:value.replace('f/','').replace('1/','').replace(' s','').replace(' m','')})));
-  const adjust = element('div', {class:'dial-adjust'});
-  const input = element('input', {type:'range',id:'control-'+key,min:'0',max:String(values.length-1),step:'1',value:String(Math.max(0,values.indexOf(state[key]))),'aria-label':label,'data-focus-key':key});
-  const less = element('button', {type:'button',text:'−','aria-label':`Decrease ${label.toLowerCase()}`});
-  const more = element('button', {type:'button',text:'+','aria-label':`Increase ${label.toLowerCase()}`});
   function draw() {
-    const index = Number(input.value), value = values[index];
-    input.setAttribute('aria-valuetext', value);
-    pointer.style.setProperty('--dial-angle', `${-125 + index / (values.length-1) * 250}deg`);
-    readout.replaceChildren(document.createTextNode(value.replace('f/','').replace(' s','')),
-      element('small', {text:units[key] || ''}));
-    [...scale.children].forEach((mark,i) => mark.dataset.active = String(i===index));
-    less.disabled = index===0; more.disabled = index===values.length-1;
+    const n = Number(range.value);
+    value.textContent = values[n].replace(' s','');
+    pointer.style.setProperty('--dial-angle', (-130 + 260*n/(values.length-1))+'deg');
+    range.setAttribute('aria-valuetext',values[n]);
+    minus.disabled = n === 0; plus.disabled = n === values.length-1;
   }
-  function change(index) {
-    input.value = String(Math.min(values.length-1, Math.max(0,index)));
-    state = updateCamera(state, {type:'set',key,value:values[Number(input.value)]});
-    draw(); redrawPreview();
-  }
-  input.addEventListener('input', () => change(Number(input.value)));
-  less.addEventListener('click', () => change(Number(input.value)-1));
-  more.addEventListener('click', () => change(Number(input.value)+1));
-  adjust.append(less,input,more); group.append(hardware,scale,adjust); host.append(group); draw();
+  function change() { draw(); apply({type:'set',key,value:values[Number(range.value)]},false); }
+  range.oninput = change;
+  adjust.append(minus,range,plus); group.append(el('legend',label),hardware,adjust);host.append(group);draw();
 }
-function controlButton(host, label, title, action, disabled = false) {
-  const group = element('fieldset', {class:'mechanical-group mechanical-action'});
-  group.append(element('legend',{text:label}));
-  const button = element('button', {type:'button',class:'hardware-action','aria-label':title,'data-focus-key':action.type});
-  const hardware = element('span', {class:'transport-hardware','aria-hidden':'true'});
-  hardware.innerHTML = action.type==='advance' ? '<span class="transport-wheel"></span><span class="transport-arm"></span>' : `<span class="fold-symbol" aria-hidden="true">${action.type==='toggle-fold' ? '⌑' : action.type==='developed' ? '▣' : '▤'}</span>`;
-  button.append(hardware,element('span', {class:'action-caption',text:title}));
-  button.disabled=disabled; button.addEventListener('click',()=>setState(action));
-  group.append(button); host.append(group);
-}
-function redrawControls() {
-  previewExposure();
-  const c = getCamera(cameraId); const host = $('mechanical-controls'); host.replaceChildren();
-  $('active-camera-name').textContent = c.name;
-  $('workbench').dataset.camera = cameraId;
-  $('camera-story-link').href = `./learn.html?chapter=${cameraId}`;
-  const engravings = {apollo:'HASSELBLAD / DATA CAMERA',sx70:'POLAROID / SX-70 LAND CAMERA',leica:'LEITZ WETZLAR / M1',rolleiflex:'ROLLEIFLEX / 2.8 F'};
-  $('instrument-engraving').textContent = engravings[cameraId];
-  $('camera-description').textContent = c.description;
-  $('fidelity-indicator').textContent = `MECHANICS ${c.mechanicalEvidence} TARGET · RENDER ${c.renderingEvidence}`;
-  $('mechanical-status').textContent = cameraStatus(state);
-  $('frame-label').textContent = `FRAME ${String(state.framesTaken + 1).padStart(4,'0')}`;
-  if (cameraId === 'sx70') {
-    controlButton(host,'Folding body',state.open ? 'Fold camera' : 'Unfold camera',{type:'toggle-fold'});
-    controlButton(host,'Instant film',state.loaded && state.remaining > 0 ? `${state.remaining} exposures` : 'Insert 10-frame pack',{type:'load'}, !state.open);
-    controlSelect(host,'Focus distance','focus',['0.3 m','0.6 m','1 m','2 m','∞']);
-    controlSelect(host,'Lighten / darken','compensation',['-2','-1','0','+1','+2']);
-    if (state.developing) controlButton(host,'Development','Complete development',{type:'developed'});
-  } else if (cameraId === 'apollo') {
-    controlSelect(host,'Lens aperture','aperture',c.apertureOptions);
-    controlSelect(host,'Shutter time','shutter',c.shutterOptions);
-    controlSelect(host,'Distance scale','focus',['1.5 m','3 m','5 m','10 m','∞']);
-    controlSelect(host,'Magazine','magazine',['loaded','removed']);
+function cameraControls() {
+  const c = getCamera(id), s = state(), host = $('mechanical-controls');
+  host.replaceChildren();
+  if (id === 'sx70') {
+    makeDial(host,'Focus distance','focus',['0.3 m','0.6 m','1 m','2 m','∞']);
+    makeDial(host,'Lighten / darken','compensation',['-2','-1','0','+1','+2']);
+    makeAction(host,'Body',s.open ? 'Fold camera':'Unfold camera',{type:'toggle-fold'});
+    makeAction(host,'Film pack',s.remaining ? s.remaining+' exposures' : 'Insert 8-frame pack',{type:'load'},!s.open || s.remaining > 0);
   } else {
-    controlSelect(host,'Aperture','aperture',c.apertureOptions);
-    controlSelect(host,'Shutter time','shutter',c.shutterOptions);
-    controlSelect(host,'Distance scale','focus',['1 m','2 m','3 m','5 m','∞']);
-    controlButton(host,'Film transport',state.ready ? 'Shutter cocked' : 'Advance film',{type:'advance'},state.ready || state.remaining===0);
-    if (state.remaining===0) controlButton(host,'Film','Load new virtual roll',{type:'load'});
+    makeDial(host,id === 'apollo' ? 'Lens aperture' : 'Aperture','aperture',c.apertureOptions);
+    makeDial(host,'Shutter time','shutter',c.shutterOptions);
+    makeDial(host,'Distance scale','focus',id==='apollo' ? ['1.5 m','3 m','5 m','10 m','∞'] : ['1 m','2 m','3 m','5 m','∞']);
+    if (id === 'apollo') {
+      const loaded = s.magazine === 'loaded';
+      makeAction(host,'Magazine',loaded ? 'Remove magazine':'Attach magazine',{type:'set',key:'magazine',value:loaded?'removed':'loaded'},false,loaded);
+    } else if (s.remaining) {
+      makeAction(host,'Film transport',s.ready ? 'Shutter cocked':'Advance film',{type:'advance'},s.ready);
+    } else makeAction(host,'Film transport','Load new virtual roll',{type:'load'});
   }
-  $('shutter').disabled = !canExpose(state);
-  $('shutter-hint').textContent = canExpose(state) ? (usingLive ? 'Live capture' : 'Uses the imported or demo source') : 'Prepare the camera to expose';
 }
-function previewFocus() {
-  const el = $('dof-blur'); if (!el) return;
-  const dof = dofParams(getCamera(cameraId), state); const W = 1000;
-  let maxR = 0; for (let v = 0.46; v <= 1; v += 0.04) maxR = Math.max(maxR, rowBlurRadius(dof, v, W));
-  const stops = []; // mask opacity per row: blur amount relative to max
-  for (let i = 0; i <= 20; i++) { const v = i / 20; stops.push(`rgba(0,0,0,${maxR ? Math.min(1, rowBlurRadius(dof, v, W) / maxR) : 0}) ${i * 5}%`); }
-  el.style.backdropFilter = el.style.webkitBackdropFilter = `blur(${Math.round(maxR * 0.6)}px)`;
-  el.style.maskImage = el.style.webkitMaskImage = `linear-gradient(to bottom, ${stops.join(',')})`;
-  el.style.display = maxR ? 'block' : 'none';
+function settings(seed, media = inputSource()) {
+  const simulated = cameraRenderParams(id,state());
+  if (id === 'sx70' && media && (source === 'demo' ? media.naturalWidth : media.videoWidth || media.width)) {
+    simulated.autoMeterStops = meterStops(sourceToFrame(media,32,32,meterBuffer));
+    simulated.exposureStops += simulated.autoMeterStops;
+  }
+  const creative = $('render-mode').value === 'creative';
+  return {...simulated, dof:{...dofParams(getCamera(id),state()), distantScene:source==='demo'}, dofModel:source==='demo'?'distant-landscape':'flat-ground-heuristic',
+    grain:creative ? Number($('grain').value) : 100, warmth:creative ? Number($('warmth').value) : 0,
+    renderMode:$('render-mode').value, operationMode:$('operation-mode').value, seed,
+    summary:settingsSummary(id,state())+' · '+filmSpeedLabel(state().filmId,film())};
 }
-function previewExposure() {
-  previewFocus();
-  const p = cameraRenderParams(cameraId, state, $('operation-mode').value);
-  const f = `brightness(${Math.pow(2, p.exposureStops).toFixed(3)})`;
-  const dim = cameraId === 'rolleiflex' ? ' contrast(.92) saturate(.9) brightness(.85)' : ' contrast(.92) saturate(.9)'; // ground glass is dim
-  $('live-video').style.filter = f + dim; $('demo-image').style.filter = f + dim;
-  $('shutter-hint').dataset.ev = p.exposureStops;
+function blindReason() {
+  if (id === 'sx70' && !state().open) return 'Camera folded';
+  if (id === 'apollo' && $('operation-mode').value === 'historical') return 'Chest mount · no optical finder';
+  return '';
 }
-function redrawPreview() {
-  previewExposure();
-  const stage = $('media-stage');
-  stage.className = 'media-stage' + (cameraId !== 'apollo' && !photo ? ` finder-on finder-${cameraId}` : '');
-  const isHistoricalApollo = cameraId === 'apollo' && $('operation-mode').value === 'historical' && !photo;
-  const overlay = $('aiming-overlay'); overlay.style.display = isHistoricalApollo ? 'flex' : 'none';
-  $('viewport-label').textContent = isHistoricalApollo ? 'HISTORICAL AIMING · NO REFLEX VIEW' : photo ? 'PROCESSED PHOTOGRAPH' : cameraId !== 'apollo' ? (usingLive ? 'LIVE · VIEWFINDER' : sourceSelection==='import' ? 'IMPORTED · VIEWFINDER' : 'DEMO · VIEWFINDER') : usingLive ? 'LIVE DIGITAL VIEW' : sourceSelection==='import' ? 'IMPORTED PHOTOGRAPH' : 'DEMONSTRATION SCENE';
-  $('preview-info').textContent = photo ? `${photo.settings.summary} · ${provenance.method.toUpperCase()}` : usingLive ? `LIVE · ${settingsSummary(cameraId, state)}` : sourceSelection==='import' ? `IMPORTED · ${settingsSummary(cameraId, state)}` : 'SYNTHETIC DEMO · NOT A PHOTOGRAPH';
-  $('mode-explanation').textContent = $('operation-mode').value==='historical' ? 'Historical · instrument-style aiming' : 'Assisted · digital aiming available';
-  $('demo-image').style.display = (usingLive || photo) ? 'none' : 'block';
-  $('live-video').style.display = usingLive && !photo ? 'block' : 'none';
-  $('photo-canvas').style.display = photo ? 'block' : 'none';
+function setExposureDisplay(stops) {
+  $('preview-ev').textContent = (stops>=0?'+':'')+stops.toFixed(1)+' stops';
+  $('shutter-hint').dataset.ev = stops.toFixed(2);
+}
+function paintFinder() {
+  clearTimeout(proofTimer);
+  if (document.hidden || blindReason()) return;
+  const media = inputSource(), proof = $('proof');
+  if (source === 'demo' && !media.naturalWidth || source === 'live' && !media.videoWidth) return;
+  const camera = getCamera(id);
+  const limit = Math.min(420, Math.max(80, Math.round($('media-stage').clientWidth * devicePixelRatio)));
+  const size = frameSize(camera, media.videoWidth || media.naturalWidth || media.width,
+    media.videoHeight || media.naturalHeight || media.height, limit);
+  const frame = sourceToFrame(media,size.width,size.height,proofBuffer);
+  const rendering = settings(0x172017);
+  setExposureDisplay(rendering.exposureStops);
+  let pixels = frame;
+  if ($('operation-mode').value === 'assisted') {
+    pixels = renderReference(frame,id,{...rendering,proof:true});
+  } else if (id === 'sx70' || id === 'rolleiflex') {
+    // The Rolleiflex viewing lens stays open as the taking aperture changes.
+    const dof = dofParams(camera,{...state(),aperture:id==='rolleiflex'?'f/2.8':'f/8'});
+    dof.distantScene = source==='demo';
+    depthBlur(pixels.data,size.width,size.height,dof);
+  }
+  if (proof.width !== size.width) proof.width = size.width;
+  if (proof.height !== size.height) proof.height = size.height;
+  proof.getContext('2d').putImageData(new ImageData(pixels.data,size.width,size.height),0,0);
+  if (source === 'live') proofTimer = setTimeout(paintFinder,120);
+}
+function refreshFinder() {
+  const stage = $('media-stage'), c = getCamera(id), assisted = $('operation-mode').value === 'assisted';
+  stage.style.setProperty('--aspect',c.frameMm+'/'+c.frameHeightMm);
+  stage.dataset.finder = id;
+  $('proof').setAttribute('aria-label',assisted?'Simulated film preview':finders[id]);
+  const reason = blindReason();
+  $('blind-label').textContent = reason; $('blind-label').hidden = !reason;
+  $('finder-lines').hidden = Boolean(reason); $('proof').hidden = Boolean(reason);
+  $('viewport-label').textContent = (source === 'live' ? 'Live' : source === 'import' ? 'Import':'Demo')+' · '+(assisted?'Film preview':finders[id]);
+  setExposureDisplay(cameraRenderParams(id,state()).exposureStops);
+  $('shutter-hint').textContent = settingsSummary(id,state())+' · '+filmSpeedLabel(state().filmId,film());
+  paintFinder();
+}
+function update() {
+  const c = getCamera(id), s = state(), stock = film();
+  $('active-camera-name').textContent = c.name;
+  $('camera-description').textContent = c.year+' · '+c.subtitle;
+  $('workbench').dataset.camera = id; $('camera-story-link').href = './learn.html?chapter='+id;
+  $('instrument-engraving').textContent = format[id].toUpperCase()+' / '+c.nominalFocalMm+' MM';
+  $('frame-label').textContent = 'FRAME '+String(s.framesTaken + 1).padStart(3,'0');
+  $('mechanical-status').textContent = cameraStatus(s);
+  for (const button of $('camera-options').children) button.setAttribute('aria-pressed',String(button.dataset.camera===id));
+  cameraControls();
+  $('film-stock').replaceChildren(...FILM_OPTIONS[id].map(key => new Option(FILMS[key].name,key)));
+  $('film-stock').value = s.filmId; $('film-stock').disabled = FILM_OPTIONS[id].length===1;
+  $('iso-value').textContent = filmSpeedLabel(s.filmId,stock);
+  $('grain-info').textContent = stock.measured ? 'RMS '+Math.round(1000*stock.rms48)+' · 48 µm' : 'Estimated grain';
+  $('shutter').disabled = busy || !canExpose(s);
+  $('use-demo').setAttribute('aria-pressed',String(source==='demo'));
+  $('start-camera').setAttribute('aria-pressed',String(source==='live'));
+  $('live-video').hidden = source !== 'live';
+  $('demo-credit').hidden = source !== 'demo';
+  $('lens-select').hidden = source!=='live' || $('lens-select').length<2;
+  $('adjustments').hidden = $('render-mode').value !== 'creative';
+  refreshFinder();
+}
+for (const key of CAMERA_ORDER) {
+  const c = getCamera(key), button = el('button');
+  button.innerHTML = cameraArtwork(key,'choice-'+key); button.append(el('span',c.short));
+  button.type='button';button.className='camera-option';button.dataset.camera=key;button.setAttribute('aria-label',c.name);
+  button.onclick = () => {
+    id=key;const url=new URL(location.href);url.searchParams.set('camera',key);history.replaceState(null,'',url);
+    message('');update();
+  };
+  $('camera-options').append(button);
 }
 
-function settings() {
-  return { grain: Number($('grain').value), warmth: Number($('warmth').value), renderMode: $('render-mode').value, operationMode: $('operation-mode').value, seed: seed + exposureCount };
-}
 async function expose() {
-  if (!canExpose(state)) { message('The camera is not ready.',true); return; }
-  $('shutter').disabled = true; message('Processing image locally…');
-  let source;
-  try {
-    if (usingLive) source = await capture.photo();
-    else if (sourceSelection === 'import' && activeSource) source = { bitmap: activeSource, method:'import', bytes: null };
-    else source = await imageFromUrl('./demo-scene.png');
-    const bitmap = source.bitmap;
-    const targetSize = Math.min(1600, bitmap.width, bitmap.height);
-    if (targetSize < 1) throw new Error('Image dimensions not supported.');
-    const w = targetSize, h = targetSize;
-    const frame = sourceToFrame(bitmap, w, h);
-    exposureCount += 1;
-    const renderSettings = { ...settings(), ...cameraRenderParams(cameraId, state, $('operation-mode').value), dof: dofParams(getCamera(cameraId), state), dofModel: 'flat-ground-heuristic', cameraSettings: { ...state } };
-    renderSettings.summary = settingsSummary(cameraId, state);
-    const result = renderReference(frame,cameraId,renderSettings);
-    const canvas = $('photo-canvas'); canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas unavailable.');
-    ctx.putImageData(new ImageData(result.data,w,h),0,0);
-    photo = { cameraId, settings: renderSettings };
-    provenance = { method:source.method, sourceWidth: bitmap.width, sourceHeight: bitmap.height, outputWidth:w,outputHeight:h, calibration:'none', imageInput:sourceSelection, lens: usingLive ? lensLabel : null };
-    state = updateCamera(state,{type:'expose'});
-    // SX-70 development is a UI step, not a simulated chemical timing model.
-    if (source.method !== 'import' && bitmap.close) bitmap.close();
-    redrawControls(); redrawPreview(); $('export').disabled = false;
-    message(`Frame captured with ${renderSettings.summary} (exposure ${renderSettings.exposureStops >= 0 ? '+' : ''}${renderSettings.exposureStops} stops, vignette ${renderSettings.vignette}%): ${w} × ${h} px via ${source.method}. Export to preserve it; this alpha does not store images.`);
-  } catch (err) { message(err.message || 'Capture failed.',true); }
-  finally { $('shutter').disabled = !canExpose(state); }
-}
-async function exportPhoto() {
-  if (!photo) return;
-  const canvas = $('photo-canvas'); const filename = `camera-archive-${cameraId}-${String(state.framesTaken).padStart(3,'0')}`;
-  const png = await new Promise(resolve => canvas.toBlob(resolve,'image/png'));
-  if (!png) { message('PNG export failed.',true); return; }
-  // iOS: the share sheet offers "Save Image" (adds to the Photos library). Web pages cannot write to Photos directly.
-  const file = new File([png], filename+'.png', { type: 'image/png' });
-  if (navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: 'Camera Archive photograph' });
-      message('Shared. Choose "Save Image" in the share sheet to add it to Photos.');
-      return;
-    } catch (err) {
-      if (err?.name === 'AbortError') { message('Save cancelled.'); return; }
-    }
-  }
-  downloadBlob(png,filename+'.png');
-  const json = photographMetadata(cameraId,state,photo.settings,provenance);
-  downloadBlob(new Blob([JSON.stringify(json,null,2)],{type:'application/json'}),filename+'.json');
-  message('PNG and JSON export requested. Confirm both files were saved by your browser.');
-}
+  if (busy || !canExpose(state())) return;
+  busy = true; $('shutter').disabled = true; $('workbench').inert = true; $('camera-options').inert = true;
+  const body = id, before = state(), input = source;
 
-let lensLabel = '';
-async function startLive(deviceId = null) {
+  let acquired;
   try {
-    const info = await capture.start(deviceId);
-    lensLabel = info.label;
-    const sel = $('lens-select'); const lenses = await capture.lenses();
-    sel.replaceChildren(...lenses.map(l => { const o = element('option', { value: l.deviceId, text: l.label || 'Camera' }); if (l.deviceId === info.deviceId) o.selected = true; return o; }));
-    sel.hidden = lenses.length < 2;
-    usingLive = true; sourceSelection='live'; photo=null; $('export').disabled=true;
-    redrawPreview(); redrawControls();
-    message(`Camera started: ${info.label || 'rear camera'} (${info.width} × ${info.height} preview). Actual still resolution will be reported after capture.`);
-  } catch (err) { message(`Camera could not start: ${err.message}`,true); }
+    if (input === 'live') acquired = await capture.photo();
+    if (input === 'demo') await $('demo-image').decode();
+    const media = acquired?.bitmap || inputSource();
+    const renderSettings = settings(0x172017 + serial + 1, media);
+    const iw = media.naturalWidth || media.width, ih = media.naturalHeight || media.height;
+    const c = getCamera(body), {width,height} = frameSize(c,iw,ih);
+    const result = renderReference(sourceToFrame(media,width,height),body,renderSettings);
+    const canvas = document.createElement('canvas');canvas.width=width;canvas.height=height;
+    canvas.getContext('2d').putImageData(new ImageData(result.data,width,height),0,0);
+    const after = updateCamera(before,{type:'expose'});
+    const provenance = {method:acquired?.method || input, sourceWidth:iw,sourceHeight:ih,outputWidth:width,outputHeight:height,
+      calibration:'relative',imageInput:input,lens:input==='live'?sourceLabel:null};
+    if (input === 'demo') provenance.attribution = {
+      title:'Fronalpstock big', creator:'Hannes Röst', source:'https://commons.wikimedia.org/wiki/File:Fronalpstock_big.jpg',
+      license:'CC BY-SA 3.0', licenseUrl:'https://creativecommons.org/licenses/by-sa/3.0/', changes:'Resized, cropped and rendered through the selected film model.'
+    };
+    const thumbnail = $('photo-canvas');thumbnail.width=84;thumbnail.height=Math.round(84*height/width);
+    thumbnail.getContext('2d').drawImage(canvas,0,0,thumbnail.width,thumbnail.height);thumbnail.hidden=false;
+    bodies[body] = after; serial++;
+    captured = {canvas,metadata:photographMetadata(body,before,renderSettings,provenance),title:c.name+' · Frame '+after.framesTaken,
+      filename:'camera-archive-'+body+'-'+String(serial).padStart(3,'0')};
+    $('review').disabled=false;$('export').disabled=false;
+    message('Frame '+after.framesTaken+' saved in session · '+width+' × '+height+' px.');
+  } catch(err) {message(err.message || 'Capture failed.',true);}
+  finally {
+    acquired?.bitmap.close?.(); busy=false;$('workbench').inert=false;$('camera-options').inert=false;update();
+  }
 }
-$('start-camera').addEventListener('click', () => startLive());
-$('lens-select').addEventListener('change', () => startLive($('lens-select').value));
-$('import-file').addEventListener('change', async evt => {
-  const file = evt.target.files?.[0]; if (!file) return;
+function metadataBlob(frame) {return new Blob([JSON.stringify(frame.metadata,null,2)],{type:'application/json'});}
+function pngOf(frame) { return new Promise((resolve,reject)=>frame.canvas.toBlob(b=>b?resolve(b):reject(new Error('PNG export failed.')),'image/png')); }
+async function exportPhoto() {
+  const frame = captured;if (!frame) return;
   try {
-    const result = await imageFromFile(file);
-    capture.stop(); usingLive=false; sourceSelection='import'; closeSource(); activeSource=result.bitmap;
-    const preview = $('demo-image'); preview.src = URL.createObjectURL(file);
-    preview.onload = () => URL.revokeObjectURL(preview.src);
-    photo=null; $('export').disabled=true; redrawPreview();redrawControls();
-    message(`Imported image ${result.bitmap.width} × ${result.bitmap.height}. Choose your controls and expose.`);
-  } catch (err) { message(err.message,true); }
-});
-$('use-demo').addEventListener('click', () => {
-  capture.stop(); usingLive=false; sourceSelection='demo'; closeSource();
-  $('demo-image').src = './demo-scene.png';photo=null;$('export').disabled=true;
-  redrawPreview();redrawControls();message('Using synthetic demonstration scene.');
-});
-$('shutter').addEventListener('click', expose);
-$('export').addEventListener('click',exportPhoto);
-$('operation-mode').addEventListener('change',redrawPreview);
-$('render-mode').addEventListener('change', () => message('Rendering mode selected. Changes take effect at the next exposure.'));
-for (const id of ['grain','warmth']) $(id).addEventListener('input',()=>{ $(id+'-value').value = $(id).value; });
-window.addEventListener('pagehide',()=>capture.stop());
-populateCameras();redrawControls();redrawPreview();
+    const png = await pngOf(frame), file = new File([png],frame.filename+'.png',{type:'image/png'});
+    if (navigator.canShare?.({files:[file]})) {
+      await navigator.share({files:[file],title:frame.title});message('Photo shared. Frame metadata is available in Last frame.');return;
+    }
+    downloadBlob(png,file.name);downloadBlob(metadataBlob(frame),frame.filename+'.json');message('PNG and frame metadata exported.');
+  } catch(err) {if (err.name!=='AbortError') message(err.message,true);}
+}
+function releaseImport() {imported?.close();imported=null;}
+function demo() {
+  sourceRequest++;capture.stop();releaseImport();source='demo';message('Demo scene ready.');update();
+}
+async function startLive(deviceId=null) {
+  const request=++sourceRequest;
+  try {
+    const info=await capture.start(deviceId);
+    if(request!==sourceRequest)return;
+    releaseImport();source='live';sourceLabel=info.label;message(info.label || 'Live camera ready.');update();
+    const lenses=await capture.lenses().catch(()=>[]);
+    if(request!==sourceRequest)return;
+    $('lens-select').replaceChildren(...lenses.map(l=>new Option(l.label||'Camera',l.deviceId,false,l.deviceId===info.deviceId)));
+    update();
+  } catch(err) {
+    if(request!==sourceRequest)return;
+    capture.stop();if(source==='live') source='demo';update();message('Camera unavailable. '+err.message,true);
+  }
+}
+$('demo-image').hidden=true;$('live-video').hidden=true;
+$('demo-image').onload=refreshFinder;$('live-video').onloadeddata=refreshFinder;
+$('start-camera').onclick=()=>startLive();$('lens-select').onchange=e=>startLive(e.target.value);$('use-demo').onclick=demo;
+$('import-file').onchange=async e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  const request=++sourceRequest;e.target.value='';
+  try{
+    const {bitmap}=await imageFromFile(file);
+    if(request!==sourceRequest){bitmap.close();return;}
+    capture.stop();releaseImport();imported=bitmap;source='import';message('Imported '+bitmap.width+' × '+bitmap.height+' px.');update();
+  }catch(err){if(request===sourceRequest)message(err.message,true);}
+};
+$('shutter').onclick=expose;$('export').onclick=exportPhoto;
+$('film-stock').onchange=e=>{apply({type:'change-film',filmId:e.target.value});message('Fresh '+format[id].toLowerCase()+' loaded.');};
+$('render-mode').onchange=update;$('operation-mode').onchange=refreshFinder;
+for(const key of ['grain','warmth']) $(key).oninput=()=>{$(key+'-value').value=$(key).value+(key==='grain'?'%':'');refreshFinder();};
+$('review').onclick=async()=>{
+  const frame=captured;
+  try {
+    const png=await pngOf(frame);if(printUrl)URL.revokeObjectURL(printUrl);printUrl=URL.createObjectURL(png);
+    $('print-title').textContent=frame.title;$('print-settings').textContent=frame.metadata.film.name+' · '+frame.metadata.simulation.settings.summary;
+    $('print-image').src=printUrl;$('print-mat').classList.remove('zoom');$('zoom-print').setAttribute('aria-pressed','false');
+    $('print-dialog').showModal();
+  }catch(err){message(err.message,true);}
+};
+$('zoom-print').onclick=()=>{const zoom=$('print-mat').classList.toggle('zoom');$('zoom-print').setAttribute('aria-pressed',String(zoom));};
+$('close-print').onclick=()=>$('print-dialog').close();
+$('save-metadata').onclick=()=>{if(captured)downloadBlob(metadataBlob(captured),captured.filename+'.json');};
+$('print-dialog').onclose=()=>{if(printUrl)URL.revokeObjectURL(printUrl);printUrl='';};
+const fs=$('fullscreen');
+function screenState() {
+  const active=Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.body.classList.contains('expanded'));
+  fs.setAttribute('aria-pressed',String(active));fs.textContent=active?'Exit full screen':'⛶ Full screen';
+}
+fs.onclick=async()=>{
+  const root=document.documentElement;
+  try {
+    if(document.fullscreenElement)await document.exitFullscreen();
+    else if(document.webkitFullscreenElement)document.webkitExitFullscreen();
+    else if(document.fullscreenEnabled)await root.requestFullscreen();
+    else if(document.webkitFullscreenEnabled)root.webkitRequestFullscreen();
+    else document.body.classList.toggle('expanded');
+  }catch{document.body.classList.toggle('expanded');}
+  screenState();
+};
+document.addEventListener('fullscreenchange',screenState);document.addEventListener('webkitfullscreenchange',screenState);
+new ResizeObserver(()=>refreshFinder()).observe($('media-stage'));
+document.addEventListener('visibilitychange',refreshFinder);
+window.addEventListener('pagehide',()=>{sourceRequest++;capture.stop();if(source==='live')source='demo';clearTimeout(proofTimer);});
+window.addEventListener('pageshow',update);
+update();

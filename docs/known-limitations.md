@@ -1,16 +1,9 @@
-# Known limitations — v0.1.0
+# Model and device limits
 
-- Not calibrated photographic emulation. Film tone/color and pixel noise are approximations.
-- No lens MTF, measured vignetting, distortion simulation or correlated/physically scaled grain yet.
-- No calibrated phone response, slanted-edge SFR measurements, DNG decode, or film-sensitometric reference data.
-- Output is cropped to square and limited to 1600 px width/height or less; not guaranteed full iPhone still resolution.
-- Apollo historical mode approximates near-blind aiming with an overlay; it does not reproduce detailed chest-mounted ergonomics.
-- SX-70 exposure programme and chemical development are not modeled; development completes on a manual UI action.
-- The film state of Apollo magazines and the physical controls of all four cameras are schematic; exact settings require archival verification.
-- Rolleiflex mirrored preview is illustrative; geometric parallax correction has not yet been implemented.
-- Leica's 35/50 framing and parallax are described but not yet rendered as physical optical finder geometry.
-- PNG+JSON export uses two browser downloads and is not guaranteed to save silently on iOS.
-- `ImageCapture` support and behavior require actual Safari/iPhone experiments.
-- No actual browser smoke result in this ZIP: automated localhost navigation was blocked in the packaging environment.
-- Core CI performs syntax, unit and build checks; it does not yet typecheck, run browser tests on every PR, or meet full calibration-based Level B release gates.
-- CDN-free / no dependencies, but further static asset hardening and third-party security audit are planned.
+- Film speed and three B&W RMS granularity values have published anchors. The model assumes spatial correlation lengths, a common display shoulder, proxy color matrices and radial falloff. See the [film model](film-model.md) for numeric inputs and validation scope.
+- The browser supplies a developed image. Phone tone mapping, existing noise and clipped highlights cannot be recovered. The app models relative exposures and prints up to 1600 pixels wide.
+- Historical optical finders, nominal lenses and the centered film gates are schematic. Geometric parallax, lens MTF, effective device field of view and distortion have no physical calibration.
+- The panorama is treated as distant. Camera and imported images have no depth map. A flat-ground depth heuristic controls defocus.
+- The SX-70 uses a proxy meter, modern film speed and pack capacity. Prints appear immediately. The leaf-shutter programme, motion blur, long-exposure reciprocity and chemical development are outside the model.
+- Inputs use their original frame only. Hardware camera capture, iOS share sheets, installation and alternative device lenses require testing on physical devices. DNG decoding depends on the browser.
+- The session retains only the last exposed frame. A new exposure replaces it. A PNG and a separate metadata file are available.

@@ -4,9 +4,16 @@ export class CaptureAdapter {
   async start(deviceId = null) {
     if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera unavailable. Use HTTPS on an iPhone or import an image.');
     this.stop();
-    this.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: 'environment' } }), width: { ideal: 3840 }, height: { ideal: 2160 } } });
-    this.video.srcObject = this.stream;
+    const generation = this.generation;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: 'environment' } }), width: { ideal: 3840 }, height: { ideal: 2160 } } });
+    if (this.generation !== generation) {
+      stream.getTracks().forEach(track => track.stop());
+      throw new Error('Camera request superseded.');
+    }
+    this.stream = stream;
+    this.video.srcObject = stream;
     await this.video.play();
+    if (this.generation !== generation) throw new Error('Camera request superseded.');
     this.method = 'live';
     const track = this.stream.getVideoTracks()[0];
     return { width: this.video.videoWidth, height: this.video.videoHeight, label: track?.label ?? '', deviceId: track?.getSettings?.().deviceId ?? deviceId };
@@ -17,6 +24,7 @@ export class CaptureAdapter {
     return devices.filter(d => d.kind === 'videoinput' && !/front|user|facetime/i.test(d.label));
   }
   stop() {
+    this.generation = (this.generation || 0) + 1;
     if (this.stream) this.stream.getTracks().forEach(t => t.stop());
     this.stream = null;
     this.video.srcObject = null;
@@ -55,12 +63,18 @@ export async function imageFromUrl(url) {
   return { bitmap: await createImageBitmap(await response.blob()), method: 'demo', bytes: null };
 }
 
-export function sourceToFrame(source, width, height) {
-  const canvas = document.createElement('canvas');
-  canvas.width = width; canvas.height = height;
+export function frameSize(camera, sourceWidth, sourceHeight, limit = 1600) {
+  const ratio = camera.frameMm / camera.frameHeightMm;
+  const width = Math.min(limit, sourceWidth, sourceHeight * ratio);
+  return {width: Math.max(1, Math.round(width)), height: Math.max(1, Math.round(width / ratio))};
+}
+export function sourceToFrame(source, width, height, canvas = document.createElement('canvas')) {
+  if (canvas.width !== width) canvas.width = width;
+  if (canvas.height !== height) canvas.height = height;
   const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: false });
   if (!ctx) throw new Error('2D canvas unavailable');
-  const iw = source.width, ih = source.height;
+  const iw = source.videoWidth || source.naturalWidth || source.width;
+  const ih = source.videoHeight || source.naturalHeight || source.height;
   const scale = Math.max(width / iw, height / ih);
   const sw = width / scale, sh = height / scale;
   ctx.drawImage(source, (iw - sw) / 2, (ih - sh) / 2, sw, sh, 0, 0, width, height);

@@ -11,7 +11,7 @@
 
 ## Source rights
 
-The project code and its original CSS, SVG demo scene and icons are MIT-licensed. Third-party references are **links only**. NASA media may have usage conditions; manufacturer trademarks and their publicity images are not licensed by this source repository. Camera names are used descriptively; no endorsement is implied.
+The project code and its original CSS, SVG demo scene and icons are MIT-licensed. The bundled demonstration photograph and its derivatives use CC BY-SA 3.0. Its source, author and modifications are documented in the [asset register](asset-register.md). NASA media may have usage conditions; manufacturer trademarks and their publicity images are not licensed by this source repository. Camera names are used descriptively; no endorsement is implied.
 
 A public preview must have a rights register for any added image, icon, film emulation LUT, manual diagram or manufacturer mark, with license, attribution, origin and hosting permissions. Keep historical reference data separate from original code when their redistribution rights differ.
 

@@ -1,5 +1,13 @@
 /** Editorial content is kept separate from the simulation's provisional configuration. */
 export const SOURCES = {
+  tmax100: ['Kodak · T-MAX 100, F-4016 (PDF)', 'https://www.kodakprofessional.com/sites/default/files/wysiwyg/pro/resources/f4016_TMax_100.pdf'],
+  tmax400: ['Kodak · T-MAX 400, F-4043 (PDF)', 'https://kodakprofessional.com/sites/default/files/wysiwyg/pro/resources/f4043_TMax_400.pdf'],
+  trix: ['Kodak · TRI-X, F-4017 (PDF)', 'https://business.kodakmoments.com/sites/default/files/files/resources/triXf4017.pdf'],
+  mission: ['NASA · Apollo 17 photographic index, table 3', 'https://esrs.jsc.nasa.gov/SearchPhotos/Metadata/Apollo17.htm'],
+  sxfilm: ['Polaroid · Color SX-70 pack specifications', 'https://www.polaroid.com/en_us/products/color-sx70-instant-film'],
+  sxmeter: ['Polaroid · SX-70 exposure compensation', 'https://support.polaroid.com/hc/en-us/articles/115012563968-Exposure-compensation-on-Polaroid-SX-70'],
+  landscape: ['Hannes Röst · Fronalpstock big', 'https://commons.wikimedia.org/wiki/File:Fronalpstock_big.jpg'],
+  cc: ['Creative Commons · Attribution-ShareAlike 3.0', 'https://creativecommons.org/licenses/by-sa/3.0/'],
   nasa: ['NASA · Astronaut still photography during Apollo', 'https://www.nasa.gov/history/astronaut-still-photography-during-apollo/'],
   biogon: ['ZEISS · Biogon 5.6/60 technical data (PDF, NASA archive)', 'https://www.nasa.gov/wp-content/uploads/static/history/alsj/Biogon5.6_60mm_ZEISS.pdf'],
   polaroid: ['Polaroid · SX-70 series cameras', 'https://support.polaroid.com/hc/en-us/articles/115012463268-Polaroid-SX-70-series-cameras'],
@@ -27,7 +35,7 @@ export const CAMERA_STORIES = {
     specs: [['Design family','Modified Hasselblad 500 EL'],['Mission context','Apollo 17 · 1972'],['Nominal lens','ZEISS Biogon 60 mm f/5.6'],['Configured image area','53 × 53 mm'],['Characteristic feature','Film-plane réseau marks']],
     exercise: 'Compare f/5.6 and f/8 at the same shutter time in historical mode. Then make a frame and look for the réseau crosses in the result.',
     limitation: 'This is an Apollo-inspired operational model. Aiming, exposure, film response, and optical effects are simplified; the result is not a calibrated reconstruction of lunar photography.',
-    sources: ['nasa','biogon']
+    sources: ['nasa','biogon','mission']
   },
   sx70: {
     label: 'A little everyday magic', format: 'Integral instant film · Folding SLR', tagline: 'A darkroom, folded into your day.',
@@ -37,12 +45,12 @@ export const CAMERA_STORIES = {
     sections: [
       ['An instrument that unfolds', 'The original SX-70 combines a folding body with through-the-lens viewing and manual focus. Its chrome-and-brown-leather form is one of the familiar versions of this design. Later Sonar versions added autofocus.'],
       ['A different kind of control', 'Instead of separate manual aperture and shutter controls, this model invites you to focus and use the lighten/darken compensation control. It is a different relationship with exposure: guide the camera rather than set every parameter.'],
-      ['Try the sequence', 'Unfold the virtual camera, insert a ten-frame pack, and set your focus. After exposure, complete the development step to prepare the next frame. The current prototype uses a manual step rather than a chemical development clock.']
+      ['Try the sequence', 'Unfold the camera and insert the modern eight-exposure ISO 160 pack. The ejected image develops outside the camera. You can expose the next sheet immediately. Last frame shows an immediate digital proof.']
     ],
-    specs: [['Original introduction','1972'],['Viewing system','Single-lens reflex'],['Focus','Manual, original model'],['Film family','SX-70 integral instant film'],['Studio operation','Fold, load, focus, expose, develop']],
-    exercise: 'Unfold and load the camera. Make two frames with different lighten/darken settings, completing the virtual development step between exposures.',
-    limitation: 'Automatic exposure is not calibrated to the original camera. Color is interpretative; development is a workflow step, not a simulation of instant-film chemistry. Pack capacity is a prototype choice.',
-    sources: ['polaroid']
+    specs: [['Original introduction','1972'],['Viewing system','Single-lens reflex'],['Focus','Manual, original model'],['Film family','SX-70 integral instant film'],['Studio operation','Fold, load, focus, expose, eject']],
+    exercise: 'Unfold and load the camera. Make two frames with different lighten/darken settings, keeping the scene fixed between exposures.',
+    limitation: 'Automatic exposure is not calibrated to the original camera. The virtual meter uses average image luminance and an illustrative compensation scale. The modern pack supplies the speed and capacity. Color and grain are estimates.',
+    sources: ['polaroid','sxfilm','sxmeter']
   },
   leica: {
     label: 'The essentials, beautifully mechanical', format: '35 mm film · Viewfinder camera', tagline: 'Small instrument. Deliberate decisions.',
@@ -55,9 +63,9 @@ export const CAMERA_STORIES = {
       ['One frame at a time', 'After exposing, advance the virtual film to cock the shutter. This small ritual encourages a pause between pictures. The prototype provides a 36-frame virtual roll and a selected set of shutter and aperture settings.']
     ],
     specs: [['Introduced','1959'],['Film format','35 mm'],['Finder','35 / 50 mm bright-line frames'],['Focusing method','Scale focus; no coupled rangefinder'],['Studio lens configuration','Nominal 50 mm']],
-    exercise: 'Choose 1 m, then infinity, and observe the demo preview. Make a frame, advance the film, and compare another focus setting.',
-    limitation: 'The studio uses a square output crop inside a wider preview. The finder and parallax behavior are partial representations. The monochrome profile is generic, not a measured Leica lens or film response.',
-    sources: ['leica']
+    exercise: 'Compare 1 m and infinity in Film preview, then repeat in the historical finder. Make a frame, advance the film, and compare another focus setting.',
+    limitation: 'The capture uses a 36 × 24 mm frame. The historical finder remains clear as the lens focus or film changes. Bright lines are schematic and parallax is approximate. The modern comparison films are compatible examples from later decades.',
+    sources: ['leica','tmax100','tmax400','trix']
   },
   rolleiflex: {
     label: 'Slow down. Look down.', format: '120 roll film · Twin-lens reflex', tagline: 'Two lenses. One considered frame.',
@@ -72,7 +80,7 @@ export const CAMERA_STORIES = {
     specs: [['Collection date','c. 1960 · early production context'],['Type','Twin-lens reflex'],['Film','120 roll film · 12 square frames'],['Taking lens','Nominal 80 mm f/2.8'],['Configured image area','56 × 56 mm']],
     exercise: 'Frame the demo using the reversed finder. Expose and compare the result with the preview. Then advance the film and try again.',
     limitation: 'Ground glass, parallax, metering, and focus are only partly represented. No measured 80 mm lens response or medium-format film emulsion is simulated.',
-    sources: ['rollei']
+    sources: ['rollei','tmax100','tmax400','trix']
   }
 };
 export const CHAPTERS = {
@@ -103,6 +111,7 @@ export const CHAPTERS = {
     sections:[
       {title:'A fraction of a second changes the story',text:'A short exposure can freeze motion; a longer one can record movement as blur. Changing from 1/125 s to 1/250 s halves the exposure time. At the same aperture and scene brightness, that also halves the light recorded.',sources:['exposure']},
       {title:'A balancing act',text:'Opening one full aperture stop can balance halving the shutter time. Film ISO describes a film’s sensitivity; digital ISO changes how the captured signal is handled and represented. ISO itself does not open the lens or extend the exposure.',sources:['exposure']},
+      {title:'Equal sensitivity, different grain',text:'T-MAX 100 and T-MAX 400 differ by two stops. Compare ISO 100 at 1/125 s with ISO 400 at 1/500 s at the same aperture. T-MAX 400 and TRI-X 400 have the same sensitivity, yet Kodak reports diffuse RMS granularity values of 10 and 17. The simulator uses these measurements and the film format to set grain strength. The texture scale is estimated.',sources:['tmax100','tmax400','trix']},
       {title:'What the studio demonstrates',text:'Both operation modes let the selected aperture and time affect the brightness model. Assisted operation keeps a digital aiming view available for the Apollo camera. The source is already a digital image: moving a virtual shutter dial cannot recreate motion that the source never recorded.'}
     ],exercise:'In historical mode, compare f/5.6 at 1/250 s with f/8 at 1/125 s. These are approximately equivalent light exposures. Our model is illustrative, not a calibrated light meter.',next:'seeing'
   },
@@ -112,17 +121,18 @@ export const CHAPTERS = {
     sections:[
       {title:'Focus chooses a distance',text:'Focusing adjusts the lens so a chosen subject distance is sharply imaged. Depth of field extends acceptable sharpness around that distance. In this prototype, distance-based blur assumes a flat ground plane; it cannot infer the actual depth of objects in an imported photograph.',sources:['focus']},
       {title:'One lens, two lenses, or a separate window',text:'The SX-70 is a single-lens reflex: the taking lens also supplies the view. The Rolleiflex uses a separate viewing lens. The Leica M1 has a separate bright-line finder without a coupled rangefinder. The Apollo-inspired historical view supplies only an approximate aiming guide.',sources:['polaroid','rollei','leica','nasa']},
-      {title:'The crop is part of the picture',text:'This prototype exports square images for all four instruments, even though real 35 mm cameras ordinarily make rectangular frames. A finder is a way of composing, not a promise that this simulation reproduces every original camera geometry.'}
+      {title:'The crop is part of the picture',text:'The Leica records a 3:2 rectangle. Apollo and Rolleiflex record squares. The modern SX-70 pack uses a 79 × 77 mm image area. The finder and recorded frame use the same center crop, with a mirrored view only while composing on the Rolleiflex.'}
     ],exercise:'Switch between the M1 and Rolleiflex before making a frame. Notice the reversed Rolleiflex preview, then compare it with its normally oriented result.',next:'about'
   },
   about: {
     category:'About the experiment',kicker:'A curious, hands-on archive',title:'Understand the instrument.<br />Explore the possibilities.',
     standfirst:'Camera Archive is an educational prototype. It combines historical control workflows with an openly interpretative image renderer.',
     sections:[
-      {title:'Start with what you have',text:'Use the included synthetic landscape, import a photograph, or start your device’s camera. A live camera requires a secure browser context and your permission. The site asks for that permission only when you press Start camera.'},
-      {title:'Two ways to operate',text:'Historical mode gives the Apollo camera a simplified aiming guide. Assisted mode keeps its digital preview available. Both modes use the same illustrative brightness model. Both retain the mechanical preparation steps: unfolding, loading, developing, or advancing as appropriate.'},
+      {title:'Start with what you have',text:'Use the included Fronalpstock landscape, import a photograph, or start your device’s camera. A live camera requires a secure browser context and your permission. The site asks for that permission only when you choose Camera.'},
+      {title:'Two ways to operate',text:'Historical mode gives the Apollo camera a simplified aiming guide. Assisted mode keeps its digital preview available. Both modes record the same exposure. The historical optical finder remains independent of the film response. Each body retains its own film and controls when you switch instruments.'},
       {title:'Evidence and interpretation',text:'Level A means historically documented; Level B means quantitatively calibrated within a stated domain; Level C means an approximation. The collection’s mechanical evidence labels are targets. Current film color, monochrome conversion, and grain are Level C. No camera here has a calibrated end-to-end optical and film model.'},
-      {title:'What the renderer can—and cannot—teach',text:'Aperture, shutter, and focus can change the illustrative output. Focus assumes flat-ground depth, grain is independent pixel noise, and instant development is a manual step. Output is a square crop capped at 1600 pixels. Original film chemistry, measured lens response, real shutter motion blur, and DNG decoding are outside this version.'},
+      {title:'What the renderer can—and cannot—teach',text:'Aperture, shutter, and focus can change the illustrative output. Focus treats the mountain panorama as distant and approximates other scenes with a flat ground plane. Seeded grain uses film-plane dimensions and output sampling. Exports preserve the film aspect ratio up to 1600 pixels wide. Original film chemistry, measured lens response, real shutter motion blur, and DNG decoding are outside this version.'},
+      {id:'demo-credit',title:'The demonstration photograph',text:'Hannes Röst photographed the Fronalpstock panorama. The bundled JPEG is cropped, resized and recompressed from the original. The simulator crops and processes it for each instrument. The demo image and its rendered derivatives use CC BY-SA 3.0. The metadata export records the author, license and modifications.',sources:['landscape','cc']},
       {title:'Your images stay with you',text:'Capture, import, and rendering happen in your browser. The app has no image upload endpoint, account system, or analytics. Photos are kept in memory, not saved automatically. Export each photograph you want to keep; the browser may offer a share sheet or PNG and metadata downloads.'},
       {title:'A note on the objects',text:'The instrument portraits are original schematic illustrations, not product photographs or exact replicas. Camera and manufacturer names identify historical subjects; they do not imply endorsement. External reading opens third-party sites with their own privacy practices.'}
     ],exercise:'Start with assisted operation and the demo scene. Once the controls feel familiar, explore historical operation and read the camera’s field guide.',next:'history'

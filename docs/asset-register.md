@@ -1,6 +1,6 @@
 # Bundled asset register
 
-All assets below are original project artwork covered by the repository's MIT license. They may be bundled with the static site. No NASA or manufacturer photographs, scanned manual diagrams, third-party fonts, or film-emulation LUTs are included.
+Original interface artwork uses MIT. The demonstration photograph has its own license. No NASA or manufacturer photographs, scanned manual diagrams, third-party fonts, or film-emulation LUTs are included.
 
 | Asset | Origin and purpose | Rights and attribution |
 | --- | --- | --- |
@@ -8,6 +8,7 @@ All assets below are original project artwork covered by the repository's MIT li
 | `index.html` story illustration | Original SVG drawings of a hand, optical enclosure, image plate, and sensor grid. | Project original artwork; MIT. |
 | `src/learn.mjs` optical diagram | Original SVG light-path illustration. | Project original artwork; MIT. |
 | `styles.css` aperture and controls | Original CSS illustrations of an aperture, rotary dials, focus ring, magazine latch, and film-advance mechanism. | Project original artwork; MIT. |
+| `public/demo-scene.jpg` | Hannes Röst, [Fronalpstock big](https://commons.wikimedia.org/wiki/File:Fronalpstock_big.jpg). Resized, cropped and recompressed for offline use. | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). The studio links the credit beside the source selector and includes it in exported demo metadata. |
 | `public/demo-scene.svg`, `public/demo-scene.png` | Existing original synthetic demonstration landscape. Not a historical photograph. | Project original artwork; MIT. |
 | `public/icons/icon.svg`, `public/icons/apple-touch-icon.png` | Existing original application icons. | Project original artwork; MIT. |
 

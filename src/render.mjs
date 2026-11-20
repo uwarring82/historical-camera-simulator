@@ -1,8 +1,23 @@
 import { getCamera } from './cameras.mjs';
+import { filmFor, densityNoise } from './film.mjs';
 import { stampReseau } from './reseau.mjs';
 import { rowBlurRadius } from './exposure.mjs';
 
-// Deterministic integer-only reference transform; not a calibrated film response.
+// An sRGB input is our proxy for scene light. Compress highlights after exposure
+// using a smooth shoulder; the transfer is an interpretation of a developed print.
+const linear = Float64Array.from({length: 256}, (_, i) => {
+  const v = i / 255;
+  return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+});
+const srgb = Float32Array.from({length: 8193}, (_, i) => {
+  const l = i / 8192;
+  return 255 * (l <= 0.0031308 ? 12.92 * l : 1.055 * l ** (1/2.4) - 0.055);
+});
+function printValue(light) {
+  const shoulder = 0.70;
+  const y = light <= shoulder ? light : 1 - (1 - shoulder) * Math.exp(-(light - shoulder) / (1 - shoulder));
+  return srgb[Math.round(y * 8192)];
+}
 const clamp8 = n => n < 0 ? 0 : n > 255 ? 255 : n;
 export function xorshift32(seed) {
   let s = (seed >>> 0) || 0x6d2b79f5;
@@ -17,56 +32,41 @@ export function renderReference({ data, width, height }, cameraId, settings = {}
   const camera = getCamera(cameraId);
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || data.length !== width * height * 4) throw new RangeError('Invalid RGBA frame');
   const out = new Uint8ClampedArray(data);
-  // Optical processing will occur here before film-plane marks; v0.1 has no calibrated lens convolution.
-  const vignette = Math.max(0, Math.min(100, Math.round(settings.vignette ?? 0)));
-  if (vignette > 0) {
-    // Integer radial falloff (cos^4-like): darkens corners, scaled by aperture-derived strength.
-    const cx2 = width - 1, cy2 = height - 1, maxR2 = cx2 * cx2 + cy2 * cy2 || 1;
-    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-      const dx = 2 * x - cx2, dy = 2 * y - cy2;
-      const r2 = Math.floor(((dx * dx + dy * dy) * 1024) / maxR2);
-      const mult = 256 - Math.floor((vignette * r2 * 256) / (100 * 1024));
-      const i = (y * width + x) * 4;
-      out[i] = (out[i] * mult) >> 8; out[i + 1] = (out[i + 1] * mult) >> 8; out[i + 2] = (out[i + 2] * mult) >> 8;
-    }
-  }
   if (settings.dof) depthBlur(out, width, height, settings.dof);
-  if (cameraId === 'apollo') stampReseau(out, width, height);
-  const seed = (settings.seed ?? 123456789) >>> 0;
-  const random = xorshift32(seed);
-  const intensity = Math.max(0, Math.min(100, Math.round(settings.grain ?? 30)));
-  const creativeWarmth = Math.max(-50, Math.min(50, Math.round(settings.warmth ?? 0)));
-  const renderMode = settings.renderMode === 'creative' ? 'creative' : 'evidence';
-  const warm = renderMode === 'creative' ? creativeWarmth : 0;
-  const gain = Math.round(256 * Math.pow(2, Math.max(-4, Math.min(4, settings.exposureStops ?? 0))));
-  const grainAmplitude = Math.floor((camera.grainBase * intensity + 50) / 100);
-  for (let i = 0; i < out.length; i += 4) {
-    const r = clamp8((out[i] * gain + 128) >> 8), g = clamp8((out[i + 1] * gain + 128) >> 8), b = clamp8((out[i + 2] * gain + 128) >> 8);
-    let rr, gg, bb;
-    if (camera.color === 'bw') {
-      const gray = (77 * r + 150 * g + 29 * b + 128) >> 8;
-      rr = gray; gg = gray; bb = gray;
-    } else if (camera.color === 'apollo') {
-      rr = (216 * r + 20 * g + 12 * b + 124) >> 8;
-      gg = (12 * r + 233 * g + 11 * b + 128) >> 8;
-      bb = (9 * r + 27 * g + 205 * b + 128) >> 8;
-    } else {
-      rr = (231 * r + 23 * g + 2 * b + 128) >> 8;
-      gg = (19 * r + 220 * g + 13 * b + 128) >> 8;
-      bb = (12 * r + 39 * g + 197 * b + 128) >> 8;
+  if (cameraId === 'apollo' && !settings.proof) stampReseau(out, width, height);
+  const film = filmFor(cameraId, settings.filmId);
+  const noise = densityNoise(film, camera.frameMm, width, xorshift32(settings.seed ?? 123456789));
+  const grainScale = Math.max(0, Math.min(2, (settings.grain ?? 100) / 100));
+  const warmth = settings.renderMode === 'creative' ? Math.max(-50, Math.min(50, settings.warmth || 0)) : 0;
+  const gain = 2 ** (settings.exposureStops ?? 0);
+  const falloff = Math.min(1, Math.max(0, (settings.vignette ?? 0) / 100));
+  const cx = (width - 1) / 2, cy = (height - 1) / 2;
+  const radius2 = cx * cx + cy * cy || 1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = 4 * (y * width + x);
+      const light = gain * (1 - falloff * ((x - cx) ** 2 + (y - cy) ** 2) / radius2);
+      let r = linear[out[i]], g = linear[out[i+1]], b = linear[out[i+2]];
+      if (film.color === 'bw') {
+        r = g = b = 0.2126*r + 0.7152*g + 0.0722*b;
+      } else if (film.color === 'instant') {
+        [r,g,b] = [0.90*r+0.10*g, 0.07*r+0.88*g+0.05*b, 0.06*r+0.16*g+0.78*b];
+      } else {
+        [r,g,b] = [0.92*r+0.08*g, 0.05*r+0.92*g+0.03*b, 0.04*r+0.10*g+0.86*b];
+      }
+      // A density fluctuation becomes multiplicative in print light. The same
+      // fluctuation affects all channels; dye-layer cross-correlations are unknown.
+      const factor = light * (grainScale ? 10 ** (grainScale * noise(x)) : 1);
+      out[i] = clamp8(printValue(r*factor) + warmth);
+      out[i+1] = clamp8(printValue(g*factor) + warmth/4);
+      out[i+2] = clamp8(printValue(b*factor) - warmth);
     }
-    // Fixed-grid, independent integer grain in this *starter*. Correlated grain is a Phase 5 goal.
-    const noise = grainAmplitude === 0 ? 0 : (random() % (2 * grainAmplitude + 1)) - grainAmplitude;
-    out[i] = clamp8(rr + noise + warm);
-    out[i + 1] = clamp8(gg + noise + (warm >> 2));
-    out[i + 2] = clamp8(bb + noise - warm);
-    out[i + 3] = data[i + 3];
   }
   return { data: out, width, height };
 }
 
 /** Row-dependent box blur (separable, prefix sums). Radius per row from the ground-plane focus model. */
-function depthBlur(px, w, h, dof) {
+export function depthBlur(px, w, h, dof) {
   const radii = new Uint8Array(h); let any = false;
   for (let y = 0; y < h; y++) { radii[y] = rowBlurRadius(dof, (y + 0.5) / h, w); if (radii[y]) any = true; }
   if (!any) return;

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { renderReference } from '../src/render.mjs';
 const frame={width:8,height:8,data:Uint8ClampedArray.from(Array(64).fill([110,150,190,255]).flat())};
 test('fixed seed and parameters yield exact deterministic bytes',()=>{
+ // At eight pixels across a whole negative the noise averages below one code value.
+ const frame={width:1024,height:8,data:new Uint8ClampedArray(1024*8*4).fill(160)};
  const a=renderReference(frame,'sx70',{seed:42,grain:60});
  const b=renderReference(frame,'sx70',{seed:42,grain:60});
  assert.deepEqual(a.data,b.data);

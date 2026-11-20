@@ -6,7 +6,8 @@
 - `src/state.mjs`: pure mechanical state machine, separate from browser camera.
 - `src/capture.mjs`: permissioned browser acquisition (`takePhoto` → `grabFrame` → video canvas); photo import and synthetic demo input.
 - `src/reseau.mjs`: subpixel rectangle shadow coverage in film coordinates, nominal 53 mm recording width.
-- `src/render.mjs`: deterministic integer RGBA **phenomenological** transform; film-plane shadows first, then color and simplified independent grain.
+- `src/render.mjs`: seeded relative linear-light exposure, optical blur, film-plane shadows and a modeled print response.
+- `src/film.mjs`: film speed, granularity data, film-plane grain sampling and seeded correlations. See the [film model](film-model.md).
 - `src/metadata.mjs`: export provenance and reproducibility configuration. No raw source storage.
 - `src/app.mjs`: simple accessible-ish DOM workbench; no front-end framework.
 - `public/sw.js`: same-origin app-shell cache; not an image archive.
