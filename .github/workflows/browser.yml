@@ -8,6 +8,9 @@ permissions:
 jobs:
   browser:
     runs-on: ubuntu-latest
+    # Match the runner package below. The image includes Chromium, WebKit and their OS libraries.
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble@sha256:9beb546099e11f52d62e505537914870e01a67e0e6b00ae41da4775324e73dbe
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -18,7 +21,6 @@ jobs:
       # This pinned optional test dependency is intentionally outside the zero-dependency core.
       # Add it to the lockfile once a registry-connected environment is available.
       - run: npm install --no-save --package-lock=false @playwright/test@1.65.0
-      - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:browser
       - if: failure()
         uses: actions/upload-artifact@v4
