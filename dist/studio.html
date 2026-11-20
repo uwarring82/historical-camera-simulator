@@ -45,12 +45,12 @@
           <header class="controls-head"><h2 id="control-title">Camera controls</h2><span id="mechanical-status"></span></header>
           <div id="mechanical-controls"></div>
           <div class="stock-row">
-            <label class="stock-picker">Film stock<select id="film-stock" title="Changing stock loads a fresh roll or magazine"></select></label>
+            <label class="stock-picker">Film stock<select id="film-stock" aria-label="Film stock" title="Changing stock loads a fresh roll or magazine"></select></label>
             <div class="film-info"><strong id="iso-value"></strong><span id="grain-info"></span></div>
           </div>
           <div class="model-row">
-            <label>Finder<select id="operation-mode"><option value="assisted">Film preview</option><option value="historical">Historical</option></select></label>
-            <label>Rendering<select id="render-mode"><option value="evidence">Stock profile</option><option value="creative">Creative</option></select></label>
+            <label>Finder<select id="operation-mode" aria-label="Finder"><option value="assisted">Film preview</option><option value="historical">Historical</option></select></label>
+            <label>Rendering<select id="render-mode" aria-label="Rendering"><option value="evidence">Stock profile</option><option value="creative">Creative</option></select></label>
           </div>
           <div id="adjustments" hidden>
             <label>Grain <output id="grain-value">100%</output><input type="range" id="grain" min="0" max="200" value="100"></label>
