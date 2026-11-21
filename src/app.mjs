@@ -5,7 +5,8 @@ import { renderReference, depthBlur } from './render.mjs';
 import { CaptureAdapter, imageFromFile, sourceToFrame, frameSize, viewGeometry } from './capture.mjs';
 import { cameraRenderParams, meterStops, settingsSummary, dofParams } from './exposure.mjs';
 import { photographMetadata, downloadBlob } from './metadata.mjs';
-import { cameraArtwork } from './illustrations.mjs';
+import { collection, bodyPhoto } from './collection.mjs';
+import { mountBodyControls } from './body-controls.mjs';
 import './site.mjs';
 
 const $ = id => document.getElementById(id);
@@ -37,6 +38,7 @@ function apply(action, redraw = true) {
 function makeAction(host, label, title, action, disabled = false, pressed) {
   const group = el('fieldset'), button = el('button', title);
   group.className = 'mechanical-group mechanical-action';
+  group.dataset.part = id === 'apollo' ? 'magazine' : id === 'sx70' ? action.type : 'advance';
   group.append(el('legend',label), button);
   button.className = pressed === undefined ? 'hardware-action' : 'magazine-switch';
   button.type = 'button'; button.disabled = disabled; button.dataset.key = action.type;
@@ -51,29 +53,20 @@ function makeAction(host, label, title, action, disabled = false, pressed) {
   host.append(group);
 }
 function makeDial(host, label, key, values) {
-  const group = el('fieldset'), hardware = el('div'), knob = el('div'), pointer = el('span'), value = el('span');
-  group.className = 'mechanical-group'; group.dataset.control = key;
-  hardware.className = 'dial-hardware'; hardware.setAttribute('aria-hidden','true');
-  knob.className = 'dial-knob'; pointer.className = 'dial-pointer'; value.className = 'dial-value';
-  hardware.append(knob); knob.append(pointer,value);
-  const adjust = el('div'), range = el('input'), minus = el('button','−'), plus = el('button','+');
-  adjust.className = 'dial-adjust';
+  const group = el('fieldset'), value = el('span'), range = el('input');
+  group.className = 'mechanical-group part-dial'; group.dataset.control = key; group.dataset.part = key;
+  value.className = 'dial-value';
   Object.assign(range,{type:'range', min:0, max:values.length-1, step:1, value:values.indexOf(state()[key]), id:'control-'+key});
   range.setAttribute('aria-label',label);
-  for (const [button,word,step] of [[minus,'Decrease',-1],[plus,'Increase',1]]) {
-    button.type = 'button'; button.setAttribute('aria-label',word+' '+label.toLowerCase());
-    button.onclick = () => { range.value = Number(range.value) + step; change(); };
-  }
+  range.disabled = id === 'sx70' && !state().open;
   function draw() {
     const n = Number(range.value);
-    value.textContent = values[n].replace(' s','');
-    pointer.style.setProperty('--dial-angle', (-130 + 260*n/(values.length-1))+'deg');
+    value.textContent = values[n];
+    group.style.setProperty('--dial-position',(8+84*n/(values.length-1))+'%');
     range.setAttribute('aria-valuetext',values[n]);
-    minus.disabled = n === 0; plus.disabled = n === values.length-1;
   }
-  function change() { draw(); apply({type:'set',key,value:values[Number(range.value)]},false); }
-  range.oninput = change;
-  adjust.append(minus,range,plus); group.append(el('legend',label),hardware,adjust);host.append(group);draw();
+  range.oninput = () => {draw();apply({type:'set',key,value:values[Number(range.value)]},false);};
+  group.append(el('legend',label),value,range);host.append(group);draw();
 }
 function cameraControls() {
   const c = getCamera(id), s = state(), host = $('mechanical-controls');
@@ -86,7 +79,7 @@ function cameraControls() {
   } else {
     makeDial(host,id === 'apollo' ? 'Lens aperture' : 'Aperture','aperture',c.apertureOptions);
     makeDial(host,'Shutter time','shutter',c.shutterOptions);
-    makeDial(host,'Distance scale','focus',id==='apollo' ? ['1.5 m','3 m','5 m','10 m','∞'] : ['1 m','2 m','3 m','5 m','∞']);
+    makeDial(host,'Distance scale','focus',id==='apollo' ? ['35 in','7 ft','11 ft','74 ft'] : ['1 m','2 m','3 m','5 m','∞']);
     if (id === 'apollo') {
       const loaded = s.magazine === 'loaded';
       makeAction(host,'Magazine',loaded ? 'Remove magazine':'Attach magazine',{type:'set',key:'magazine',value:loaded?'removed':'loaded'},false,loaded);
@@ -185,6 +178,9 @@ function update() {
   $('mechanical-status').textContent = cameraStatus(s);
   for (const button of $('camera-options').children) button.setAttribute('aria-pressed',String(button.dataset.camera===id));
   cameraControls();
+  const figure = id==='sx70' && !s.open && collection.sx70.foldedFigure ? collection.sx70.foldedFigure : bodyPhoto(id);
+  mountBodyControls(id,figure,!s.open);
+  $('instrument-record').href = './learn.html?chapter='+id+'#'+(figure===collection.sx70.foldedFigure?'folded':'instrument');
   $('film-stock').replaceChildren(...FILM_OPTIONS[id].map(key => new Option(FILMS[key].name,key)));
   $('film-stock').value = s.filmId; $('film-stock').disabled = FILM_OPTIONS[id].length===1;
   $('iso-value').textContent = filmSpeedLabel(s.filmId,stock);
@@ -200,7 +196,8 @@ function update() {
 }
 for (const key of CAMERA_ORDER) {
   const c = getCamera(key), button = el('button');
-  button.innerHTML = cameraArtwork(key,'choice-'+key); button.append(el('span',c.short));
+  const thumbnail=el('img'); thumbnail.src=bodyPhoto(key).src; thumbnail.alt='';
+  button.append(thumbnail,el('span',c.short));
   button.type='button';button.className='camera-option';button.dataset.camera=key;button.setAttribute('aria-label',c.name);
   button.onclick = () => {
     id=key;const url=new URL(location.href);url.searchParams.set('camera',key);history.replaceState(null,'',url);

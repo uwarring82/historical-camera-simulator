@@ -88,10 +88,10 @@ test('the cached field guide opens an unvisited chapter after its origin stops',
  // A real origin outage avoids WebKit's known offline-emulation fault:
  // https://github.com/microsoft/playwright/issues/42775
  const root = process.cwd();
- const types = {'.html':'text/html','.css':'text/css','.mjs':'text/javascript','.js':'text/javascript','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webmanifest':'application/manifest+json'};
+ const types = {'.html':'text/html','.css':'text/css','.mjs':'text/javascript','.js':'text/javascript','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.webmanifest':'application/manifest+json'};
  const server = createServer(async(req,res)=>{
   const file = new URL(req.url,'http://localhost').pathname.slice(1) || 'index.html';
-  const relative = /^(sw\.js|(?:manifest|studio)\.webmanifest|demo-scene\.|icons\/)/.test(file) ? path.join('public',file) : file;
+  const relative = /^(sw\.js|(?:manifest|studio)\.webmanifest|demo-scene\.|collection\/|icons\/)/.test(file) ? path.join('public',file) : file;
   const target = path.resolve(root,relative);
   if (!target.startsWith(root+path.sep)) {res.writeHead(403).end();return;}
   try { const body = await readFile(target); res.writeHead(200,{'Content-Type':types[path.extname(target)] || 'application/octet-stream'}).end(body); }
@@ -222,4 +222,38 @@ test('instant print stays in its mount after changing cameras',async({page})=>{
   await expect(page.locator('#print-mat')).toHaveAttribute('data-camera','sx70');
   const {width,height}=await page.locator('.print-sheet').boundingBox();
   expect(width/height).toBeCloseTo(88.47/107.52,2);
+});
+
+test('the photographed Leica release exposes a frame and the marked lens ring adjusts the aperture',async({page})=>{
+  await page.goto('/studio.html?camera=leica');
+  await page.locator('#body-image').evaluate(image=>image.decode());
+  const point = async name=>{
+    const marker = page.locator('#part-leaders [data-part-name="'+name+'"] circle');
+    await expect(marker).toHaveAttribute('cx',/^[0-9]/);
+    const box=await marker.boundingBox();
+    return {x:box.x+box.width/2,y:box.y+box.height/2};
+  };
+  const aperture=page.getByRole('slider',{name:'Aperture',exact:true});
+  const ring=await point('aperture');
+  await page.mouse.move(ring.x,ring.y);await page.mouse.down();
+  await page.mouse.move(ring.x+12,ring.y);await page.mouse.up();
+  await expect(aperture).toHaveAttribute('aria-valuetext','f/8');
+  const release=await point('release');
+  await page.mouse.click(release.x,release.y);
+  await expect(page.locator('#photo-canvas')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Advance film'})).toBeEnabled();
+});
+
+test('each instrument record contains local credited images, technical notes and an exposure source',async({page})=>{
+  for(const camera of ['apollo','leica','rolleiflex','sx70']){
+    await page.goto('/learn.html?chapter='+camera);
+    await expect(page.locator('#mechanism h3').first()).toBeVisible();
+    const figures=page.locator('.archive-print');
+    expect(await figures.count()).toBeGreaterThanOrEqual(3);
+    for(const figure of await figures.all()){
+      await figure.locator('img').evaluate(image=>{image.loading='eager';return image.decode();});
+      await expect(figure.getByRole('link',{name:'Source record'})).toHaveAttribute('href',/^https:/);
+    }
+    expect(await page.locator('#photographs a').count()).toBeGreaterThan(0);
+  }
 });

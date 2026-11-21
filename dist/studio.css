@@ -1,285 +1,156 @@
-:root{font:16px/1.3 "Helvetica Neue",Arial,sans-serif;color:#262b29;background:#efeee8;color-scheme:light;--line:#c8c8bd;--rust:#95452b;--mono:ui-monospace,"Courier New",monospace}
-*{box-sizing:border-box}
-body{margin:0;min-height:100svh;background:radial-gradient(ellipse at 25% 10%,#f9f8f3,transparent 62%)}
-button,select,input{font:inherit;color:inherit}
-button,.file-btn,select{cursor:pointer}
-button{border:1px solid var(--line);border-radius:5px;background:#faf9f5}
-button:disabled{opacity:.48;cursor:default}
-button:not(:disabled):hover,.file-btn:hover{border-color:#6a7068}
-a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}
-:focus-visible,.file-btn:focus-within{outline:3px solid #bf6f43;outline-offset:2px}
-[hidden]{display:none!important}
-.skip{position:absolute;left:8px;top:-60px}.skip:focus{top:6px;background:white;z-index:10}
-.mast{border-bottom:1px solid var(--line)}
-nav,main{width:min(1160px,calc(100% - 64px));margin:auto}
-nav{display:flex;align-items:center;gap:16px;height:54px;font-size:.86rem}
-.brand{display:flex;align-items:center;gap:8px;font-size:1.05rem;font-weight:700;letter-spacing:-.04em}
-.brand i{font:1.7rem Georgia;color:var(--rust)}
-.divider{height:18px;width:1px;background:var(--line)}
-.room{color:#585f58}#camera-story-link{margin-left:auto}
-#fullscreen{padding:6px 10px}#fullscreen span{font-size:1.05rem}
-main{padding:clamp(10px,3vh,32px) 0 14px}
-.instrument-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 clamp(10px,2.4vh,24px)}
-h1,h2,p{margin:0}
-h1{font:500 clamp(1.55rem,3.3vw,2.8rem)/1.08 Georgia,serif;letter-spacing:-.045em}
-#camera-description{color:#555f56;font-size:.875rem;margin-top:4px}
-#camera-options{display:flex;gap:5px}
-.camera-option{display:grid;width:clamp(66px,6.9vw,93px);justify-items:center;padding:4px 3px;background:#f6f5ee;font-size:.75rem}
-.camera-option svg{width:58px;height:36px}
-.camera-option[aria-pressed=true]{border-color:var(--rust);background:#f2e9dd;box-shadow:inset 0 -2px var(--rust)}
-#workbench{border:1px solid #a8aaa0;background:#f8f7f1;border-radius:12px;box-shadow:0 12px 28px #343a2c13,0 2px 3px #343a2c0e;overflow:hidden}
-.bench-grid{display:grid;grid-template-columns:1fr 1.12fr}
-.finder-panel{display:grid;grid-template-rows:1fr auto;min-width:0;background:#dedfd6;border-right:1px solid #adafa5}
-.finder-plate{color:#edece0;background:repeating-linear-gradient(128deg,#ffffff04 0 1px,transparent 1px 3px),linear-gradient(135deg,#474c46,#242b27 67%);display:flex;flex-direction:column;min-width:0}
-.plate-head,.view-foot{display:flex;justify-content:space-between;gap:5px;align-items:center;font:600 .71rem/1.2 var(--mono);letter-spacing:.065em}
-.plate-head{padding:14px 17px;color:#dcdfd1}
-#frame-label{color:#c8d2ba;white-space:nowrap}
-.view-room{position:relative;flex:1;display:grid;place-items:center;min-height:80px;padding:12px}
-.view-room::before,.view-room::after{content:"";position:absolute;top:50%;width:8px;height:8px;box-shadow:0 1px 2px #000;border-radius:50%;background:linear-gradient(140deg,#92988a 38%,#424740 42% 56%,#96998f 62%)}
-.view-room::before{left:4%}.view-room::after{right:4%}
-.eyecup{padding:clamp(9px,1.6vh,19px);border:2px solid #171b18;box-shadow:inset 0 2px 3px #798075,0 5px 9px #1118;background:repeating-linear-gradient(0deg,#292c2a 0 2px,#303330 2px 4px);border-radius:18% / 22%}
-#media-stage{position:relative;width:clamp(134px,26vh,266px);aspect-ratio:var(--aspect,1);background:#0b100e;border:3px solid #101310;border-radius:5px;overflow:hidden;box-shadow:0 0 0 2px #484e47}
-#media-stage img,#media-stage video,#proof{width:100%;height:100%;position:absolute;inset:0;object-fit:cover}
-#finder-lines{position:absolute;inset:5%;pointer-events:none;background:linear-gradient(#fff9,#fff9) left top/10% 1px,linear-gradient(#fff9,#fff9) right top/10% 1px,linear-gradient(#fff9,#fff9) left bottom/10% 1px,linear-gradient(#fff9,#fff9) right bottom/10% 1px,linear-gradient(#fff9,#fff9) left top/1px 10%,linear-gradient(#fff9,#fff9) left bottom/1px 10%,linear-gradient(#fff9,#fff9) right top/1px 10%,linear-gradient(#fff9,#fff9) right bottom/1px 10%;background-repeat:no-repeat}
-#media-stage[data-finder=rolleiflex] :is(img,video,canvas){transform:scaleX(-1)}
-#media-stage[data-finder=rolleiflex] #finder-lines{inset:0;background:linear-gradient(90deg,transparent 33%,#595b4466 33.3%,transparent 33.8% 66%,#595b4466 66.4%,transparent 66.8%),linear-gradient(0deg,transparent 33%,#595b4466 33.3%,transparent 33.8% 66%,#595b4466 66.4%,transparent 66.8%)}
-#media-stage[data-finder=sx70] #finder-lines{inset:38%;border:1px solid #fff8;border-radius:50%;background:none}
-#blind-label{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:8px;color:#ccd0be;background:#171c18;font: .8rem var(--mono)}
-.view-foot{padding:10px 17px;color:#e6e9db;border-top:1px solid #ffffff18;text-transform:uppercase}
-#preview-ev{color:#f4ca91}
-.source-strip{display:flex;align-items:center;gap:6px;padding:9px 14px;min-width:0}
-.source-strip button,.file-btn,#lens-select{font-size:.82rem;padding:6px 10px;border:1px solid #b8bbaf;border-radius:4px;background:#f3f3eb}
-.source-strip [aria-pressed=true]{background:#505b4d;color:#fff;border-color:#505b4d}
-.file-btn{position:relative}.file-btn input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
-#lens-select{min-width:0;max-width:43%;flex:1}
-.controls-panel{padding:clamp(12px,2.2vh,24px);display:flex;flex-direction:column;gap:clamp(8px,1.65vh,16px);min-width:0}
-.controls-head,.stock-row,.model-row,#adjustments,.transport,dialog header{display:flex;align-items:center;gap:12px}
-.controls-head{justify-content:space-between;gap:6px}
-h2{font:500 1.38rem Georgia,serif;letter-spacing:-.025em}
-#mechanical-status{font:600 .69rem var(--mono);color:#506148;text-align:right}
-#mechanical-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.mechanical-group{min-width:0;margin:0;border:1px solid var(--line);border-radius:6px;padding:7px 6px 6px;background:linear-gradient(#eeede5,#e4e4da);text-align:center}
-.mechanical-group legend{float:left;width:100%;padding:0;font-size:.82rem;color:#435043;font-weight:600}
-.dial-hardware{clear:both;display:grid;place-items:center;padding:6px 0}
-.dial-knob{position:relative;display:grid;place-items:center;width:clamp(52px,8.3vh,77px);aspect-ratio:1;border-radius:50%;background:repeating-conic-gradient(#585b53 0deg 2deg,#252a25 3deg 5deg);box-shadow:0 2px 3px #2227,inset 0 1px 2px #fff7}
-.dial-knob::before{content:"";position:absolute;inset:5px;border-radius:50%;background:radial-gradient(at 40% 26%,#4e554a,#262b25 80%);border:1px solid #798071}
-.dial-pointer{position:absolute;inset:1px;transform:rotate(var(--dial-angle));z-index:1}
-.dial-pointer::before{content:"";display:block;background:#f0ad70;width:2px;height:7px;margin:auto}
-.dial-value{z-index:1;color:#fbf5df;font:600 clamp(.8rem,1.7vh,.98rem) var(--mono)}
-.dial-adjust{display:flex;align-items:center;gap:4px;clear:both}
-.dial-adjust button{font:600 .95rem var(--mono);width:24px;height:25px;padding:0;flex:none;background:#f6f5ee}
-input[type=range]{min-width:0;width:100%;accent-color:#86462e;cursor:pointer}
-.mechanical-action{grid-column:1/-1;display:flex;align-items:center;text-align:left;gap:10px;padding:5px 10px}
-.mechanical-action legend{width:auto;float:none;display:contents}
-.hardware-action,.magazine-switch{margin-left:auto;padding:4px 10px;font-size:.84rem}
-.hardware-action:disabled{opacity:.7}
-.stock-row,.model-row,#adjustments{padding-top:9px;border-top:1px solid var(--line)}
-.stock-row label,.model-row label,#adjustments label{display:grid;gap:3px;font-weight:600;font-size:.78rem;color:#50574c;flex:1;min-width:0}
-select{font-size:.87rem;border:1px solid #adb1a5;border-radius:4px;background:#fbfaf6;padding:5px;max-width:100%}
-.stock-picker{flex:1.8!important}
-.film-info{display:grid;font: .73rem/1.3 var(--mono);color:#58604e;min-width:92px}.film-info strong{font-size:.96rem;color:#2c382d}
-#adjustments label{grid-template-columns:1fr auto}#adjustments input{grid-column:1/-1;margin:0}
-.transport{border-top:1px solid #aeb1a4;background:#e6e6db;padding:11px 16px;min-height:62px}
-#shutter{background:#853d29;border:1px solid #643120;color:#fff8ec;border-radius:24px;display:flex;gap:8px;align-items:center;padding:7px 17px 7px 8px;font-weight:650}
-#shutter i{width:25px;height:25px;border:3px solid #b3aba0;border-radius:50%;background:radial-gradient(at 36% 28%,#d78c63,#9f4228 68%,#673222);box-shadow:0 1px 2px #351b10}
-.report{flex:1;min-width:0;font-size:.82rem;display:grid}.report span:first-child{font-weight:650}
-#feedback{color:#4d574b}.error{color:#963b27!important}
-#review,#export{padding:7px 11px;font-size:.85rem;min-height:36px}
-#review{display:flex;align-items:center;gap:6px}#photo-canvas{width:28px;height:24px;object-fit:contain;background:#2f352e}
-dialog{border:1px solid #b6b8ac;padding:16px;border-radius:8px;width:min(90vw,960px);color:#262b29;background:#f5f4ed}
-dialog::backdrop{background:#101810bb}dialog header{justify-content:space-between}dialog button{padding:6px 11px}
-#print-settings{font: .86rem/1.5 var(--mono);margin:8px 0}
-#print-mat{display:grid;align-items:start;justify-items:center;background:#242923;overflow:auto;max-height:65dvh;margin:8px 0}
-#print-image{display:block;max-width:100%;max-height:64dvh}#print-mat.zoom #print-image{max-width:none;max-height:none;justify-self:start}
-@media(max-width:760px){
-  nav,main{width:calc(100% - 24px)}nav{height:40px;gap:10px}.room,.divider{display:none}
-  main{padding:8px 0}.instrument-header{align-items:flex-start;flex-direction:column;gap:6px;margin-bottom:7px}
-  #camera-options{width:100%;gap:4px}.camera-option{flex:1;width:auto;padding:4px;font-size:.77rem}.camera-option svg{display:none}
-  #camera-description{font-size:.77rem;margin-top:1px}h1{font-size:1.65rem}
-  .bench-grid{grid-template-columns:1fr}.finder-panel{border-right:none}
-  .finder-plate{position:relative}.view-room{min-height:0;padding:5px}
-  #media-stage{width:clamp(80px,14vh,135px)}.eyecup{padding:7px;border-radius:12px}
-  .plate-head,.view-foot{position:absolute;top:0;bottom:0;width:calc((100% - 166px)/2);padding:8px;flex-direction:column;justify-content:center;align-items:flex-start;gap:5px;font-size:.62rem;pointer-events:none}
-  .view-foot{right:0;border:0;align-items:flex-end;text-align:right}
-  .view-room::before,.view-room::after{display:none}
-  .source-strip{padding:4px 8px;justify-content:center}.source-strip button,.file-btn,#lens-select{padding:3px 8px}
-  .controls-panel{padding:8px 10px;gap:6px}.controls-head h2{font-size:1.06rem}
-  #mechanical-controls{gap:5px}.mechanical-group{padding:4px}.mechanical-group legend{font-size:.74rem}
-  .dial-hardware{padding:3px 0}.dial-knob{width:43px}.dial-value{font-size:.74rem}
-  .mechanical-action{padding:3px 8px}.hardware-action,.magazine-switch{padding:3px 8px}
-  .stock-row,.model-row,#adjustments{padding-top:4px;gap:8px}
-  .model-row label,.stock-row label{display:flex;align-items:center;gap:4px;white-space:nowrap}
-  select{min-width:0;width:100%;padding:3px;font-size:.8rem}.film-info{min-width:76px;font-size:.62rem}.film-info strong{font-size:.78rem}
-  .transport{padding:6px;gap:6px;flex-wrap:wrap;min-height:0}#shutter{padding:4px 11px 4px 5px}#review,#export{min-height:31px;padding:3px 7px}
-  .report{order:4;flex:0 0 100%;font-size:.73rem;display:block}.report span:first-child{margin-right:5px}#review{margin-left:auto}
-}
-@media (orientation:landscape) and (max-height:580px){
-  nav,main{width:calc(100% - 20px)}main{padding:4px 0}nav{height:30px}
-  .instrument-header{flex-direction:row;align-items:center;margin-bottom:4px}.instrument-header h1{font-size:1.25rem}
-  #camera-description{display:none}#camera-options{width:auto}.camera-option{width:auto;padding:3px 8px}.camera-option svg{display:none}
-  .bench-grid{grid-template-columns:.84fr 1.16fr}.plate-head,.view-foot{position:static;width:auto;flex-direction:row;padding:5px 8px;font-size:.62rem}
-  .controls-panel{padding:5px 8px;gap:4px}.controls-head h2{font-size:1rem}
-  #mechanical-controls{gap:3px}.mechanical-group{padding:2px 4px}.mechanical-group legend{font-size:.73rem}
-  .dial-hardware{padding:2px}.dial-knob{width:35px}.dial-value{font-size:.64rem}.dial-adjust button{height:21px}
-  .mechanical-action{padding:2px 6px}.hardware-action,.magazine-switch{padding:2px 6px}
-  .stock-row,.model-row,#adjustments{padding-top:2px}.stock-row label,.model-row label{display:flex;align-items:center;gap:4px}
-  select{padding:2px;font-size:.75rem}.view-room{padding:3px}#media-stage{width:clamp(74px,25vh,150px)}
-  .transport{padding:4px 8px;min-height:0;flex-wrap:nowrap}.report{order:0;flex:1;font-size:.71rem}#review,#export{min-height:28px;padding:4px}
-  #shutter{padding:3px 10px 3px 4px}.source-strip{padding:4px 6px}
-}
-#demo-credit{margin-left:auto;font-size:.75rem;color:#435142;text-decoration:underline;text-underline-offset:2px}
-#workbench[data-camera=sx70] #mechanical-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
-#workbench[data-camera=sx70] .mechanical-action{grid-column:auto;flex-wrap:wrap;gap:4px}
-#workbench[data-camera=sx70] .hardware-action{margin-left:auto}
-@media (orientation:portrait) and (max-width:460px) and (max-height:730px) {
-  nav{height:34px}.brand{font-size:.96rem}.brand i{font-size:1.2rem}
-  main{padding-top:4px}.instrument-header{gap:4px;margin-bottom:5px}
-  #camera-description{font-size:.7rem}h1{font-size:1.4rem}
-  .finder-panel{grid-template-columns:1fr 84px;grid-template-rows:auto}
-  .source-strip{flex-direction:column;gap:2px;padding:3px;justify-content:center}
-  .source-strip button,.file-btn,#lens-select{min-width:0;max-width:100%;width:100%;font-size:.7rem;padding:1px;text-align:center}
-  #demo-credit{margin:0;font-size:.64rem}.plate-head,.view-foot{width:calc((100% - 92px)/2);padding:5px;letter-spacing:0}
-  #media-stage{width:74px}.view-room{padding:3px}.eyecup{padding:5px}
-  .controls-panel{gap:4px;padding:6px 7px}.mechanical-action{gap:3px}
-  #workbench[data-camera=sx70] .mechanical-action{display:block;text-align:center}
-  #workbench[data-camera=sx70] .mechanical-action legend{display:block;float:left}
-  .report{min-height:1em}
-}
-@media (orientation:portrait) and (max-height:590px) {
-  #camera-description{display:none}.mechanical-group legend{font-size:.71rem}
-  #mechanical-controls{gap:3px}.dial-hardware{padding:1px 0}.dial-knob{width:36px}
-  .stock-row,.model-row,#adjustments{padding-top:2px}
-  .stock-picker,.model-row label{font-size:.7rem}.dial-adjust{gap:1px}
-}
-@media (orientation:landscape) and (max-height:420px) {
-  .instrument-header{margin-bottom:2px}nav{height:26px}
-  .controls-panel{gap:2px}.source-strip button,.file-btn{padding:2px 6px}
-  .model-row select,.stock-row select{height:22px}
-  .transport{padding:2px 6px}
-}
-/* The action captions already identify the folding body and pack on short screens. */
-@media (max-width:460px) and (max-height:730px), (orientation:landscape) and (max-height:420px) {
-  #workbench[data-camera=sx70] .mechanical-action{display:grid;padding:2px 3px}
-  #workbench[data-camera=sx70] .mechanical-action legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-  #workbench[data-camera=sx70] .mechanical-action button{width:100%;margin:0;white-space:nowrap;font-size:.76rem;padding:3px}
-}
-@media (orientation:portrait) and (max-width:360px) and (max-height:590px) {
-  #workbench[data-camera=sx70] .dial-hardware{padding:0}
-  .controls-head{min-height:0}
-  .controls-head h2{font-size:.94rem}
-  .model-row label,.stock-row label{line-height:1.05}
-  .report{line-height:1.1}
-  #adjustments label{gap:0}
-}
-@media (orientation:landscape) and (max-height:420px), (max-width:360px) and (max-height:590px) {
-  #adjustments label{grid-template-columns:auto auto minmax(24px,1fr);align-items:center;gap:3px}
-  #adjustments input{grid-column:3}
-}
-
-/* Optical windows and the separate film proof. Only the focusing screen is reversed. */
-#media-stage[data-view=proof] #finder-lines{display:none}
-#media-stage[data-finder=rolleiflex][data-view=proof] canvas{transform:none}
-#media-stage[data-finder=leica] #finder-lines{inset:0;background:none}
-#media-stage[data-finder=leica] #finder-lines i,
-#media-stage[data-finder=leica] #finder-lines b{position:absolute;inset:3.704%;border:1px solid #fff5c8;box-shadow:0 0 1px #191b16}
-#media-stage[data-finder=leica] #finder-lines b{inset:17.593%;border-color:#fffce2}
-#media-stage[data-finder=sx70] #finder-lines{display:none}
-#media-stage[data-loupe=true] #finder-lines{display:none}
-#loupe{position:absolute;inset:0;display:flex;align-items:end;justify-content:end;width:100%;height:100%;padding:4px 6px;border:0;border-radius:0;color:white;background:transparent;font:700 14px var(--mono);text-shadow:0 1px 3px #101510}
-#loupe:focus-visible{outline-offset:-3px}
-#workbench[data-camera=apollo] .finder-plate{background:linear-gradient(140deg,#747a76,#444d4a 44%,#303836)}
-#workbench[data-camera=leica] .finder-plate{background:linear-gradient(180deg,#bfc2b8,#949a91 15%,#363a34 16%,#222721 80%);}
-#workbench[data-camera=leica] .eyecup{border-radius:9px;background:linear-gradient(145deg,#74796c,#242820 40%,#111510)}
-#workbench[data-camera=leica] .plate-head,#workbench[data-camera=leica] #frame-label{color:#fff;text-shadow:0 1px 3px #111}
-#workbench[data-camera=rolleiflex] .eyecup{border:0;border-radius:3px;background:conic-gradient(from 45deg,#292c26 25%,#45473d 0 50%,#171b16 0 75%,#393d33 0);box-shadow:inset 0 0 0 1px #727668,0 3px 8px #0008}
-#workbench[data-camera=sx70] .finder-plate{background:repeating-linear-gradient(108deg,#ffffff08 0 1px,transparent 1px 4px),linear-gradient(135deg,#76523e,#423129 75%);}
-#workbench[data-camera=sx70] .eyecup{border-radius:24% / 18%;border-color:#372c24}
-.print-sheet{max-width:100%}
+:root{font:16px/1.35 "Helvetica Neue",Arial,sans-serif;color:#eeeae2;background:#242625;--mono:ui-monospace,"Courier New",monospace;--line:#5a5b55;--paper:#eeede7;--accent:#e5a46d;--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;min-height:100svh;padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);background:radial-gradient(ellipse at 44% 34%,#42443f,#242625 76%)}
+button,select,input{font:inherit}button,select,.file-btn{cursor:pointer}
+button,select,.file-btn{background:#393c38;color:#eeeee5;border:1px solid #61645a;border-radius:5px}
+button:disabled,select:disabled{cursor:default}button:disabled{opacity:.62}
+a{color:inherit;text-decoration-thickness:1px;text-underline-offset:3px}
+:focus-visible,.file-btn:focus-within{outline:3px solid #e79e52;outline-offset:2px}
+.skip{position:absolute;top:-80px}.skip:focus{top:4px;left:8px;background:#222;z-index:10}
+nav,main{width:min(1240px,calc(100% - 56px));margin:auto}
+.mast{border-bottom:1px solid #51534d}nav{display:flex;align-items:center;gap:16px;height:52px;font-size:.88rem}
+nav a{text-decoration:none}nav a:hover{text-decoration:underline}.brand{font-weight:650;letter-spacing:-.035em;display:flex;align-items:center;gap:8px}.brand i{font:1.45rem Georgia;color:var(--accent)}.divider{height:17px;border-left:1px solid #666}.room{color:#c3c6ba}
+#camera-story-link{margin-left:auto}#fullscreen{padding:6px 10px}
+main{padding:clamp(9px,2.7vh,27px) 0 12px}
+.instrument-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:clamp(9px,2.5vh,24px)}
+h1,h2,p{margin:0}h1{font:normal clamp(1.8rem,3.2vw,2.8rem)/1.08 Georgia,serif;letter-spacing:-.045em}#camera-description{color:#c0c4b8;font-size:.87rem;margin-top:4px}
+#camera-options{display:flex;align-items:stretch;gap:5px}.camera-option{display:grid;align-items:center;justify-items:center;padding:4px 9px;min-width:74px;font-size:.8rem;gap:3px;background:#333632}
+.camera-option img{width:56px;height:35px;object-fit:contain;background:var(--paper);border-radius:2px}
+.camera-option[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 -2px var(--accent);color:#ffdcbb}
+#workbench{border:1px solid #797c72;background:#292c29;border-radius:10px;overflow:hidden;box-shadow:0 13px 40px #0005,0 1px 0 #ffffff38 inset}
+.bench-grid{display:grid;grid-template-columns:minmax(0,1.82fr) minmax(320px,1fr)}
+.body-bay{display:flex;flex-direction:column;min-width:0;border-right:1px solid #5a5e52;--trim:#c7cbc1;--body-ink:#222820;--dial-bg:#323830}
+#workbench[data-camera=sx70] .body-bay{--trim:#c4a88f;--body-ink:#3c2921;--dial-bg:#47362c}
+#workbench[data-camera=leica] .body-bay{--trim:#d8d8cd;--dial-bg:#30312d}
+#workbench[data-camera=rolleiflex] .body-bay{--trim:#b4b4a6;--dial-bg:#292b27}
+.body-head,.body-footer{display:flex;gap:8px;align-items:center;justify-content:space-between;color:var(--body-ink);background:linear-gradient(176deg,#f5f5ed 0%,var(--trim) 46%,var(--trim));padding:10px 14px}
+.body-head h2{font:600 .95rem/1.2 "Helvetica Neue",Arial,sans-serif}
+#mechanical-status,.body-footer{font:.68rem/1.3 var(--mono)}#mechanical-status{font-weight:650;letter-spacing:.04em}
+.body-footer{border-top:1px solid #b9bcb0;padding:8px 14px}.body-footer a{font-family:Arial,sans-serif;font-size:.78rem}
+.camera-table{position:relative;isolation:isolate;flex:1;min-height:clamp(290px,47dvh,490px);background:radial-gradient(ellipse at center,#fffef9 12%,#e3e2da 88%);color:#222;--side-gap:clamp(6px,1vw,15px);--chip:min(20%,136px)}
+.body-image-area{position:absolute;inset:3% 14%}.body-image-area img{display:block;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;user-select:none}
+#part-leaders{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+#part-leaders polyline{stroke:#514535;stroke-width:1.4;stroke-linejoin:round;fill:none;filter:drop-shadow(0 0 1px #fff)}
+#part-leaders circle{fill:#f8c58d;stroke:#312e28;stroke-width:1.6}
+#part-leaders .obscured polyline{stroke-dasharray:4 3}#part-leaders .obscured circle{fill:#f4f1e8}
+#part-leaders .selected polyline{stroke:#b5491f;stroke-width:2.3}#part-leaders .selected circle{fill:#ff9c55;stroke:#572d20}
+#mechanical-controls{display:contents}
+[data-part]{position:absolute;top:calc((var(--slot) + .5)*100%/3);transform:translateY(-50%);width:var(--chip);margin:0;min-width:0}
+[data-part][data-side=left]{left:var(--side-gap)}[data-part][data-side=right]{right:var(--side-gap)}
+.mechanical-group{border:1px solid #686a60;border-radius:5px;background:linear-gradient(#4c5047,var(--dial-bg) 60%);box-shadow:0 2px 3px #2223,inset 0 1px #fff2;padding:6px 7px 7px;color:#f4f1e7}
+.mechanical-group legend{float:left;width:100%;font-size:.75rem;line-height:1.1;color:#e4e4d8;padding:0}
+.part-dial{min-height:55px}
+.part-dial::after{content:"";display:block;height:5px;clear:both;margin-top:3px;background:linear-gradient(to right,transparent calc(var(--dial-position) - 1px),#ffd195 calc(var(--dial-position) - 1px) calc(var(--dial-position) + 2px),transparent calc(var(--dial-position) + 2px)),repeating-linear-gradient(90deg,#ffffff66 0 1px,transparent 1px 8%)}
+.dial-value{display:block;clear:both;font:600 1.06rem/1.2 var(--mono);color:#fff5d6}
+.part-dial input{position:absolute;inset:0;width:100%;height:100%;min-height:44px;margin:0;opacity:0;touch-action:pan-y;cursor:ew-resize}
+.part-dial:focus-within{outline:3px solid #bb5c24;outline-offset:2px}.part-dial:has(input:disabled){opacity:.64}
+.mechanical-action{padding:0;background:#e9e8df;color:#302f2c}.mechanical-action legend{display:none}
+.mechanical-action button,#shutter{width:100%;min-height:48px;padding:5px 4px;line-height:1.15;font-size:.83rem;font-weight:600}
+.mechanical-action button{border:0;background:linear-gradient(#eceee6,#c3c7bb);color:#262c24}
+#shutter{width:var(--chip);color:#ffefe5;background:linear-gradient(#9f513d,#6d3022);border:1px solid #603323;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 5px #0003}
+#shutter i{display:inline-block;width:15px;height:15px;border-radius:50%;border:2px solid #bab1a0;background:radial-gradient(at 35% 25%,#e8b092,#a64b36 65%,#713126)}
+.utility-bay{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0;padding:clamp(10px,1.5vw,21px);background:linear-gradient(165deg,#353a34,#262a26);color:#eee}
+.optics{display:grid;gap:14px}.finder-plate{min-width:0;padding:8px 12px;border:1px solid #131713;border-radius:7px;background:repeating-linear-gradient(110deg,#ffffff03 0 1px,transparent 1px 3px),#1c201d;box-shadow:inset 0 1px 2px #000b;color:#e0dfd1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.plate-head{display:flex;align-items:center;justify-content:space-between;width:100%;gap:3px;font:600 .66rem var(--mono)}
+#preview-ev{color:#edb67e}#viewport-label{font:.72rem/1.25 var(--mono);text-align:center}
+.eyecup{background:#30332d;padding:6px;border:2px solid #080b09;border-radius:10px;box-shadow:inset 0 1px 2px #a9aba280}
+#workbench[data-camera=rolleiflex] .eyecup{background:conic-gradient(from 45deg,#272921 25%,#4b4e40 0 50%,#191c17 0 75%,#383b32 0);border-radius:2px}
+#media-stage{position:relative;width:clamp(84px,15vh,158px);aspect-ratio:var(--aspect,1);background:#0c100d;overflow:hidden;border-radius:2px}
+#proof,#live-video,#demo-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#media-stage[data-view=optical][data-finder=rolleiflex] canvas{transform:scaleX(-1)}
+#finder-lines{position:absolute;inset:0;pointer-events:none}#media-stage[data-view=proof] #finder-lines{display:none}
+#media-stage[data-view=optical][data-finder=leica] #finder-lines i,#media-stage[data-view=optical][data-finder=leica] #finder-lines b{position:absolute;inset:3.704%;border:1px solid #fff6cc;box-shadow:0 0 1px #151a11}
+#media-stage[data-view=optical][data-finder=leica] #finder-lines b{inset:17.593%}
+#media-stage[data-view=optical][data-finder=rolleiflex]:not([data-loupe=true]) #finder-lines{background:linear-gradient(90deg,transparent 33%,#49554066 33.3%,transparent 33.8% 66%,#49554066 66.4%,transparent 66.8%),linear-gradient(0deg,transparent 33%,#49554066 33.3%,transparent 33.8% 66%,#49554066 66.4%,transparent 66.8%)}
+#blind-label,#loupe{position:absolute;inset:0}#blind-label{display:grid;place-items:center;text-align:center;padding:3px;font:.72rem var(--mono);color:#dbdccb}
+#loupe{width:100%;height:100%;display:flex;align-items:end;justify-content:end;padding:3px;background:transparent;border:0}
+#loupe span{background:#161b17cb;border:1px solid #aaa;border-radius:2px;padding:2px;color:#faf7e7;font:.66rem var(--mono)}
+.setup-controls{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;align-items:end;min-width:0}
+.setup-controls label{display:grid;min-width:0;gap:2px;font-size:.75rem;color:#d6dacd}.setup-controls label:first-child{grid-column:1}
+.setup-controls select,#lens-select{width:100%;min-width:0;font-size:.86rem;padding:5px 3px;background:#eceee4;color:#22281e}
+.film-info{font:.66rem var(--mono);display:grid;align-self:center}.film-info strong{font-size:.93rem;color:#edcea6}
+.source-strip{display:flex;align-items:center;gap:5px;min-width:0}.source-strip button,.file-btn,#demo-credit{font-size:.79rem;display:inline-flex;align-items:center;justify-content:center;padding:5px 8px}
+.source-strip [aria-pressed=true]{background:#d7ddcd;color:#25301e}.file-btn{position:relative}.file-btn input{position:absolute;inset:-1px;width:calc(100% + 2px);height:calc(100% + 2px);opacity:0;cursor:pointer;margin:0}
+#demo-credit{margin-left:auto}#lens-select{max-width:43%;margin-left:auto}
+#adjustments{display:flex;gap:8px}#adjustments label{display:grid;grid-template-columns:auto 1fr;min-width:0;flex:1;font-size:.78rem;gap:1px 4px}#adjustments output{text-align:right}#adjustments input{grid-column:1/-1;width:100%;margin:0;min-width:0;accent-color:#d2a77b}
+.transport{border-top:1px solid #5b5f55;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#30342f;min-width:0}
+.report{flex:1;display:grid;min-width:0;font-size:.82rem}.report span:first-child{font-weight:650;color:#e8e3d3}#feedback{color:#c7cbbf;overflow-wrap:anywhere}.error{color:#ffd0b7!important}
+#review,#export{padding:6px 11px;font-size:.87rem;min-height:36px}#review{display:flex;align-items:center;gap:6px}#photo-canvas{width:25px;height:22px;object-fit:contain}
+dialog{border:1px solid #94988b;padding:16px;border-radius:8px;width:min(92vw,960px);color:#242821;background:#f4f3ec}
+dialog::backdrop{background:#111611bd}dialog header{display:flex;align-items:center;justify-content:space-between}dialog h2{font:1.6rem Georgia}dialog button{padding:6px 10px}
+#print-settings{font:.86rem/1.5 var(--mono);margin:8px 0}#print-mat{display:grid;align-items:start;justify-items:center;background:#242923;overflow:auto;max-height:65dvh;margin:8px 0}
+.print-sheet{max-width:100%}#print-image{display:block;max-width:100%;max-height:64dvh}#print-mat.zoom #print-image,#print-mat.zoom .print-sheet{max-width:none;max-height:none;justify-self:start}
 #print-mat[data-camera=sx70]:not(.zoom) .print-sheet{position:relative;width:min(100%,calc(61dvh * .823));aspect-ratio:88.47/107.52;margin:8px auto;background:#f6f4ec;box-shadow:0 2px 6px #0008}
 #print-mat[data-camera=sx70]:not(.zoom) #print-image{position:absolute;left:5.38%;top:4.43%;width:89.24%;height:71.43%;max-height:none}
-#print-mat.zoom .print-sheet{max-width:none;justify-self:start}
 #screen-help{max-width:28rem}#screen-help p{margin-top:12px;line-height:1.5}
-:root{--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
-/* The 6.3-inch phone deck. Preserve the compact legacy layouts on smaller viewports. */
-@media (min-width:384px) and (max-width:460px) and (orientation:portrait),
-       (min-width:800px) and (max-width:960px) and (max-height:500px) and (orientation:landscape){
-  body{display:flex;flex-direction:column;min-height:100dvh;padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)}
-  nav,main{width:100%}nav{height:44px;gap:8px;padding:0 10px}
-  nav a,nav button{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
-  #fullscreen{border:0;background:transparent;padding:0 3px;text-decoration:underline;text-underline-offset:3px}
-  main{display:flex;flex:1;flex-direction:column;padding:0 6px 4px}
-  .instrument-header{gap:4px;margin:0;padding:4px 0}
-  #camera-options{gap:3px}.camera-option{height:44px;min-width:44px;padding:2px 6px}
-  #workbench{display:flex;flex:1;flex-direction:column;border-radius:8px}
-  .bench-grid{flex:1}.finder-panel,.controls-panel{min-height:0}
-  .source-strip{flex-direction:row;align-items:center;gap:3px;padding:0 4px}
-  .source-strip button,.file-btn,#lens-select,#demo-credit{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;width:auto;padding:1px 6px;font-size:.76rem}
-  .file-btn input{inset:-1px;height:calc(100% + 2px);width:calc(100% + 2px);margin:0}#demo-credit{margin-left:auto}
-  .source-strip select{max-width:40%}
-  .mechanical-group[data-control]{position:relative;display:grid;grid-template-rows:auto 1fr;align-items:center;padding:3px 4px}
-  .mechanical-group[data-control] legend{float:left;display:contents}
-  .dial-hardware{position:relative;min-height:44px;padding:0;background:repeating-linear-gradient(90deg,#7c8074 0 1px,transparent 1px 6px) center / calc(100% - 10px) 4px no-repeat}
-  .dial-knob{width:42px}.dial-value{font-size:.73rem}
-  .dial-adjust{position:absolute;inset:auto 0 2px;height:44px;z-index:2}
-  .dial-adjust button{display:none}.dial-adjust input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;touch-action:pan-y}
-  .mechanical-group:focus-within{outline:2px solid var(--rust);outline-offset:-2px}
-  .hardware-action,.magazine-switch{min-height:44px}
-  #workbench[data-camera=sx70] .mechanical-action{display:flex;align-items:center}
-  .stock-row,.model-row,#adjustments{padding-top:0}
-  .model-row select,.stock-row select{height:44px;font-size:16px}
-  .stock-picker,.model-row label{min-width:0;gap:3px}
-  #adjustments label{grid-template-columns:auto auto minmax(24px,1fr);align-items:center;gap:3px}
-  #adjustments input{grid-column:3;height:44px}
-  .transport{flex:none;gap:4px;padding:2px 6px}
-  #shutter,#review,#export,dialog button{min-height:44px;min-width:44px;touch-action:manipulation}
-  #shutter{padding:3px 12px 3px 5px}#review{margin-left:auto}
-  .controls-head h2{font-size:1rem}
-  dialog{max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 12px);max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 16px)}
+
+@media (max-width:760px),(orientation:landscape) and (max-height:520px){
+  body{display:flex;flex-direction:column;min-height:100dvh}
+  nav,main{width:100%}nav{height:44px;gap:9px;padding:0 9px}
+  nav a,nav button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px}
+  #fullscreen{border:0;background:transparent;padding:0 2px;text-decoration:underline;text-underline-offset:3px}
+  .divider,.room,.camera-option img{display:none}
+  main{display:flex;flex:1;flex-direction:column;padding:0 5px 3px}
+  .instrument-header{gap:3px;margin:0;padding:3px 0}
+  .camera-option{height:44px;min-width:44px;padding:1px 4px;flex:1}
+  #camera-description{display:none}
+  #workbench{display:flex;flex:1;flex-direction:column;border-radius:6px}.bench-grid{flex:1}
+  .body-head{padding:4px 7px}.body-head h2{font-size:.84rem}.body-footer{padding:3px 6px}.body-footer a{font-size:.72rem}
+  .camera-table{--side-gap:5px;--chip:clamp(75px,23%,100px);min-height:153px}
+  .body-image-area{inset:2% 13%}.part-dial{min-height:44px;padding:3px 5px 4px}
+  .mechanical-group legend{font-size:.67rem}.dial-value{font-size:.88rem}
+  .part-dial::after{height:3px;margin-top:2px}
+  .mechanical-action button,#shutter{min-height:44px;font-size:.74rem}
+  .utility-bay{padding:4px;gap:3px;justify-content:center}
+  .optics{grid-template-columns:minmax(92px,.78fr) minmax(0,1.5fr);align-items:stretch;gap:5px}
+  .finder-plate{padding:4px;gap:3px}.plate-head{font-size:.58rem;flex-wrap:wrap;justify-content:center;gap:2px 6px}
+  #viewport-label{font-size:.62rem}#media-stage{width:clamp(61px,10.4dvh,92px)}
+  .eyecup{padding:3px;border-width:1px}
+  .setup-controls{grid-template-columns:1fr;gap:1px;align-items:center}
+  .setup-controls label,.setup-controls label:first-child{grid-column:1;display:grid;grid-template-columns:57px minmax(0,1fr);align-items:center;gap:3px;font-size:.72rem;line-height:1}
+  .setup-controls select,#lens-select{min-height:44px;font:400 16px/1.1 Arial,sans-serif;padding:1px 2px}
+  .film-info{display:flex;gap:4px;font-size:.59rem}.film-info strong{font-size:.65rem}
+  .source-strip{gap:4px}.source-strip button,.file-btn,#demo-credit{min-width:44px;min-height:44px;padding:2px 5px;font-size:.77rem}
+  #adjustments{gap:8px}#adjustments label{grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:4px;font-size:.72rem}#adjustments input{grid-column:3;height:44px}
+  .transport{padding:2px 5px;gap:5px}.report{font-size:.70rem}#review,#export{min-height:44px;min-width:44px;padding:3px 6px;font-size:.78rem}
+  dialog{max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 12px);max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 14px)}
+  dialog button{min-height:44px}
 }
-@media (min-width:384px) and (max-width:460px) and (orientation:portrait){
-  .instrument-header{flex-direction:column;align-items:stretch}
-  .instrument-header>div:first-child{display:flex;gap:8px;align-items:baseline;padding-left:4px}
-  h1{font-size:1.44rem;line-height:1.15}#camera-description{display:none}
-  .bench-grid{grid-template-rows:minmax(max-content,1fr) auto}
-  .finder-panel{grid-template:1fr auto / 1fr}
-  .view-room{padding:4px}.eyecup{padding:6px}
-  #media-stage{width:clamp(88px,16dvh,148px)}
-  .plate-head,.view-foot{width:calc((100% - clamp(110px,18dvh,168px))/2);padding:7px;letter-spacing:.02em}
-  .controls-panel{gap:3px;padding:4px 6px}
-  .mechanical-action{padding:1px 6px}.mechanical-group legend{font-size:.75rem}
-  .report{font-size:.69rem;min-height:1em}
-  #mechanical-controls{gap:3px}.controls-head{min-height:19px}
+@media (max-width:760px) and (orientation:portrait){
+  .instrument-header{display:block}h1{font-size:1.38rem;padding:2px 2px 4px}
+  #camera-options{width:100%;gap:3px}
+  .bench-grid{grid-template-columns:1fr;grid-template-rows:minmax(max-content,1fr) auto}
+  .body-bay{border-right:0}
+  .optics{grid-template-columns:minmax(88px,.78fr) minmax(0,1.35fr)}
 }
-@media (min-width:800px) and (max-width:960px) and (max-height:500px) and (orientation:landscape){
-  .mast{position:absolute;top:var(--safe-top);left:var(--safe-left);height:46px;width:calc((100% - var(--safe-left) - var(--safe-right)) * .42);border:0}
-  nav{gap:6px;font-size:.78rem;padding:0 6px}.brand{font-size:.83rem;gap:3px}.brand i{font-size:1.1rem}.room,.divider{display:none}
-  .instrument-header{min-height:46px;align-items:end;justify-content:center;flex-direction:column;padding:1px 0}
+@media (orientation:landscape) and (max-height:520px){
+  .mast{position:absolute;top:var(--safe-top);left:var(--safe-left);height:44px;width:calc((100% - var(--safe-left) - var(--safe-right)) * .43);border:0}
+  nav{gap:5px;padding:0 5px;font-size:.75rem}.brand{gap:3px;font-size:.81rem}.brand i{font-size:1rem}
+  #camera-story-link{margin-left:auto}
+  .instrument-header{align-items:end;justify-content:center;flex-direction:column;padding:0;min-height:44px}
   .instrument-header>div:first-child{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-  #camera-options{width:56%}.camera-option{flex:1}
-  .bench-grid{grid-template-columns:minmax(0,.73fr) minmax(0,1.27fr)}
-  .finder-panel{grid-template:1fr auto / 1fr}
-  #media-stage{width:clamp(74px,28dvh,130px)}
-  .view-room{padding:2px;min-height:0}.eyecup{padding:6px}
-  .plate-head,.view-foot{font-size:.60rem;letter-spacing:0;padding:4px 6px}
-  .controls-panel{padding:3px 6px;gap:2px;justify-content:space-evenly}
-  #mechanical-controls,#workbench[data-camera=sx70] #mechanical-controls{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
-  #mechanical-controls .mechanical-action,#workbench[data-camera=sx70] .mechanical-action{grid-column:auto;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;gap:1px;padding:2px;text-align:center}
-  #mechanical-controls .mechanical-action legend{position:static;clip-path:none;width:100%;height:auto;display:contents}
-  #mechanical-controls .mechanical-action button{width:100%;margin:auto 0 0;line-height:1.05;font-size:.75rem;padding:1px;white-space:normal}
-  .film-info{min-width:90px}.stock-picker{display:flex;align-items:center}
-  .model-row label{flex-direction:row;align-items:center}
-  .report{order:0;flex:1;font-size:.67rem}.transport{flex-wrap:nowrap}
-  #review{margin-left:0}
+  #camera-options{width:55%}.camera-option{font-size:.72rem}
+  .bench-grid{grid-template-columns:minmax(0,1.32fr) minmax(245px,1fr)}
+  .camera-table{--chip:clamp(63px,22%,100px);min-height:146px}
+  .body-footer{font-size:.6rem}.body-footer a{font-size:.64rem}
+  .optics{grid-template-columns:minmax(67px,.6fr) minmax(0,1.2fr);gap:3px}
+  #media-stage{width:clamp(56px,15dvh,73px)}.setup-controls label,.setup-controls label:first-child{grid-template-columns:45px minmax(0,1fr);font-size:.65rem}
+  .finder-plate{padding:2px}.source-strip{gap:2px}
 }
-#loupe span{padding:2px 4px;background:#151912cf;border:1px solid #c5c8b2;border-radius:2px;font:600 10px/1.15 var(--mono);color:#fffde9}
-.camera-option{align-content:center}
-.model-row select,.stock-row select{font-weight:400}
-@media (min-width:384px) and (max-width:460px) and (orientation:portrait) and (max-height:730px){
-  #media-stage{width:82px}.view-room{padding:2px}
+@media(max-width:380px) and (orientation:portrait) and (max-height:680px){
+  nav{height:30px}nav a,nav button{min-height:30px}
+  h1{font-size:1.15rem;padding:0 2px 2px}
+  .camera-option{height:31px}.body-head,.body-footer{padding-block:2px}
+  .camera-table{min-height:137px}.part-dial,.part-dial input,.mechanical-action button,#shutter{min-height:37px}.part-dial{padding-block:2px}
+  .utility-bay{padding:3px}.setup-controls select,#lens-select,.source-strip button,.file-btn,#demo-credit,#adjustments input,#review,#export{min-height:32px;height:32px}
+  .setup-controls select{font-size:14px}
 }
-@media (min-width:800px) and (max-width:960px) and (orientation:landscape) and (max-height:355px){
-  #media-stage{width:68px}.eyecup{padding:4px}
-  .bench-grid{position:relative}
-  .bench-grid:has(#adjustments:not([hidden])) .finder-panel{padding-bottom:45px}
-  #adjustments:not([hidden]){position:absolute;left:0;bottom:0;width:36.5%;height:45px;padding:0 4px;background:#eeeee6;gap:5px}
+
+.camera-table{touch-action:none}
+.part-hint{margin-right:auto;font-size:.76rem;color:#45483f}
+@media(max-width:950px){.part-hint{display:none}}
+@media (orientation:landscape) and (max-height:355px){
+  #workbench{position:relative}
+  #adjustments:not([hidden]){position:absolute;left:5px;bottom:2px;width:41%;height:44px}
+  #workbench:has(#adjustments:not([hidden])) .transport{padding-left:43%}
 }

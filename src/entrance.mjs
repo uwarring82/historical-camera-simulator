@@ -1,12 +1,15 @@
 import { CAMERA_ORDER, getCamera } from './cameras.mjs';
-import { cameraArtwork } from './illustrations.mjs';
+import { bodyPhoto } from './collection.mjs';
 import { CAMERA_STORIES } from './guide.mjs';
 import './site.mjs';
 const $ = id => document.getElementById(id);
 function previewCamera(id) {
   const camera = getCamera(id), story = CAMERA_STORIES[id];
-  $('hero-camera').innerHTML = cameraArtwork(id, 'hero-' + id);
-  $('hero-camera').setAttribute('aria-label', `Schematic illustration of the ${camera.name}`);
+  const photo = bodyPhoto(id), img = document.createElement('img');
+  img.src = photo.src;img.alt = photo.alt;
+  $('hero-camera').replaceChildren(img);
+  $('hero-camera').removeAttribute('role');$('hero-camera').removeAttribute('aria-label');
+  $('hero-photo-credit').href = './learn.html?chapter='+id+'#instrument';
   $('hero-year').textContent = camera.year;
   $('hero-camera-name').textContent = camera.name;
   $('hero-camera-subtitle').textContent = story.tagline;
@@ -21,7 +24,7 @@ for (const id of CAMERA_ORDER) {
   button.textContent = camera.short; button.setAttribute('aria-pressed', String(id === 'apollo'));
   button.addEventListener('click', () => previewCamera(id)); $('hero-tabs').append(button);
   const card = document.createElement('article'); card.className = `collection-card collection-${id}`;
-  card.innerHTML = `<div class="card-heading"><span>${camera.year}</span><span>${story.format}</span></div><a class="collection-art" href="./learn.html?chapter=${id}" aria-label="Discover the ${camera.name}">${cameraArtwork(id, 'collection-' + id)}</a><div class="collection-copy"><p class="eyebrow">${story.label}</p><h3>${camera.name}</h3><p>${story.intro}</p><div class="card-links"><a class="text-link" href="./learn.html?chapter=${id}">Its story & details ↗</a><a class="try-camera" href="./studio.html?camera=${id}" aria-label="Try the ${camera.name}">Take the controls <span aria-hidden="true">→</span></a></div></div>`;
+  card.innerHTML = `<div class="card-heading"><span>${camera.year}</span><span>${story.format}</span></div><a class="collection-art" href="./learn.html?chapter=${id}" aria-label="Discover the ${camera.name}"><img src="${bodyPhoto(id).src}" alt="" loading="lazy"></a><div class="collection-copy"><p class="eyebrow">${story.label}</p><h3>${camera.name}</h3><p>${story.intro}</p><div class="card-links"><a class="text-link" href="./learn.html?chapter=${id}">Its story & details ↗</a><a class="try-camera" href="./studio.html?camera=${id}" aria-label="Try the ${camera.name}">Take the controls <span aria-hidden="true">→</span></a></div></div>`;
   $('collection-grid').append(card);
 }
 previewCamera('apollo');

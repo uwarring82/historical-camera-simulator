@@ -50,7 +50,10 @@ export function settingsSummary(cameraId, state) {
 // horizon at 45% of frame height; everything above the horizon is at infinity. This is a
 // crude stand-in so that focus + aperture visibly matter. NOT a calibrated optical model.
 export const HORIZON = 0.45, EYE_HEIGHT_M = 1.2, MAX_BLUR_PX = 14;
-export function parseFocusMm(s) { const m = /^([\d.]+)\s*m/.exec(String(s ?? '')); return m ? Number(m[1]) * 1000 : null; } // null = infinity
+export function parseFocusMm(value) {
+  const match = /^([\d.]+)\s*(m|ft|in)$/.exec(String(value ?? ''));
+  return match ? Number(match[1]) * {m:1000,ft:304.8,in:25.4}[match[2]] : null;
+}
 export function dofParams(camera, state) {
   const N = parseAperture(state.aperture) ?? 8; // SX-70 has no aperture control: nominal f/8 assumed
   return { focalMm: camera.nominalFocalMm, fNumber: N, focusMm: parseFocusMm(state.focus), frameMm: camera.frameMm };

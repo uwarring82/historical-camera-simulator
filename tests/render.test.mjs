@@ -66,3 +66,11 @@ test('the Apollo Biogon uses its two aperture curves at physical film coordinate
     assert.ok(Math.abs(illuminationAt(c,settings,at30)-expected)<.001);
   }
 });
+
+test('Apollo flight focus distances reach the optical model in millimetres',()=>{
+  const camera=getCamera('apollo');
+  for(const [focus,millimetres] of [['35 in',889],['7 ft',2133.6],['11 ft',3352.8],['74 ft',22555.2]]) {
+    assert.ok(Math.abs(dofParams(camera,{aperture:'f/5.6',focus}).focusMm-millimetres)<1e-8);
+  }
+  assert.deepEqual(camera.apertureOptions,['f/5.6','f/8','f/11','f/16']);
+});

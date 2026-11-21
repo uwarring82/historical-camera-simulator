@@ -22,36 +22,39 @@
     </div>
     <section id="workbench" aria-label="Camera workbench" data-camera="apollo">
       <div class="bench-grid">
-        <section class="finder-panel" aria-label="Viewfinder and source">
-          <div class="finder-plate">
-            <header class="plate-head"><span id="instrument-engraving"></span><span id="frame-label"></span></header>
-            <div class="view-room">
-              <div class="eyecup"><div id="media-stage">
-                <img id="demo-image" src="./demo-scene.jpg" alt="Mountain panorama at Fronalpstock"><video id="live-video" playsinline muted autoplay aria-label="Live camera"></video>
-                <canvas id="proof" aria-label="Simulated film preview"></canvas>
-                <div id="finder-lines" aria-hidden="true"><i></i><b></b></div>
+        <section class="body-bay" aria-labelledby="control-title">
+          <header class="body-head"><h2 id="control-title">Camera controls</h2><span class="part-hint">Drag a dial or lens ring</span><span id="mechanical-status"></span></header>
+          <div class="camera-table" id="camera-table">
+            <div class="body-image-area"><img id="body-image" alt="" draggable="false"></div>
+            <svg id="part-leaders" aria-hidden="true"></svg>
+            <div id="mechanical-controls"></div>
+            <button id="shutter" type="button" data-part="release" aria-label="Expose photograph"><i aria-hidden="true"></i><span>Expose</span></button>
+          </div>
+          <footer class="body-footer"><span id="instrument-engraving"></span><a id="instrument-record" href="./learn.html?chapter=apollo#instrument">Photo &amp; technical record</a></footer>
+        </section>
+        <section class="utility-bay" aria-label="Viewfinder, film and image source">
+          <div class="optics">
+            <div class="finder-plate">
+              <div class="plate-head"><span id="frame-label"></span><output id="preview-ev"></output></div>
+              <div class="view-room"><div class="eyecup"><div id="media-stage">
+                <img id="demo-image" src="./demo-scene.jpg" alt="Mountain panorama at Fronalpstock" hidden><video id="live-video" playsinline muted autoplay aria-label="Live camera" hidden></video>
+                <canvas id="proof" aria-label="Simulated film preview"></canvas><div id="finder-lines" aria-hidden="true"><i></i><b></b></div>
                 <button id="loupe" type="button" aria-label="Focusing magnifier" aria-pressed="false" hidden><span>Loupe</span></button><span id="blind-label" hidden></span>
-              </div></div>
+              </div></div></div>
+              <span id="viewport-label">Film preview</span>
             </div>
-            <div class="view-foot"><span id="viewport-label">Film preview</span><output id="preview-ev" title="Relative exposure at the film speed"></output></div>
+            <div class="setup-controls">
+              <label>Film stock<select id="film-stock" aria-label="Film stock" title="Changing stock loads a fresh roll or magazine"></select></label>
+              <div class="film-info"><strong id="iso-value"></strong><span id="grain-info"></span></div>
+              <label>Finder<select id="operation-mode" aria-label="Finder"><option value="assisted">Film preview</option><option value="historical">Historical</option></select></label>
+              <label>Rendering<select id="render-mode" aria-label="Rendering"><option value="evidence">Stock profile</option><option value="creative">Creative</option></select></label>
+            </div>
           </div>
           <div class="source-strip" aria-label="Image source">
             <button id="use-demo" type="button">Demo</button><button id="start-camera" type="button">Camera</button>
             <label class="file-btn">Import<input id="import-file" type="file" accept="image/*,.dng" aria-label="Import photo"></label>
-            <a id="demo-credit" href="./learn.html?chapter=about#demo-credit" title="Demo photograph and license">Photo credit</a>
+            <a id="demo-credit" href="./learn.html?chapter=about#demo-credit">Photo credit</a>
             <select id="lens-select" aria-label="Device lens" hidden></select>
-          </div>
-        </section>
-        <section class="controls-panel" aria-labelledby="control-title">
-          <header class="controls-head"><h2 id="control-title">Camera controls</h2><span id="mechanical-status"></span></header>
-          <div id="mechanical-controls"></div>
-          <div class="stock-row">
-            <label class="stock-picker">Film stock<select id="film-stock" aria-label="Film stock" title="Changing stock loads a fresh roll or magazine"></select></label>
-            <div class="film-info"><strong id="iso-value"></strong><span id="grain-info"></span></div>
-          </div>
-          <div class="model-row">
-            <label>Finder<select id="operation-mode" aria-label="Finder"><option value="assisted">Film preview</option><option value="historical">Historical</option></select></label>
-            <label>Rendering<select id="render-mode" aria-label="Rendering"><option value="evidence">Stock profile</option><option value="creative">Creative</option></select></label>
           </div>
           <div id="adjustments" hidden>
             <label>Grain <output id="grain-value">100%</output><input type="range" id="grain" min="0" max="200" value="100"></label>
@@ -60,7 +63,6 @@
         </section>
       </div>
       <div class="transport">
-        <button id="shutter" type="button" aria-label="Expose photograph"><i aria-hidden="true"></i><span>Expose</span></button>
         <div class="report"><span id="shutter-hint"></span><span id="feedback" role="status" aria-live="polite">Demo scene ready.</span></div>
         <button id="review" type="button" disabled><canvas id="photo-canvas" hidden aria-hidden="true"></canvas><span>Last frame</span></button>
         <button id="export" type="button" disabled>Export</button>

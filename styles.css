@@ -54,3 +54,21 @@ h1,h2{word-spacing:2px}
 .hero h1{word-spacing:5px}
 .dial-adjust button{min-width:24px;min-height:24px}
 .card-links a{min-height:28px}
+
+/* Camera records use catalogued photographs, with the object and its credit kept together. */
+.hero-product .product-orbit,.hero-product .orbit-note{display:none}
+.hero-camera{margin:0;position:relative}
+.hero-camera img{display:block;width:100%;height:clamp(220px,30vw,390px);object-fit:contain;mix-blend-mode:multiply}
+.object-credit{display:block;text-align:center;margin:5px 0 12px;font-size:.75rem;text-decoration:underline;text-underline-offset:3px}
+.collection-art img{display:block;width:100%;height:clamp(150px,18vw,225px);object-fit:contain;mix-blend-mode:multiply}
+.archive-print{margin:24px 0 0}.archive-print .print-link{display:block;background:#e9e8e3;line-height:0;border:1px solid #d4d5ca}
+.archive-print img{display:block;width:100%;height:auto;max-height:72vh;object-fit:contain}
+.archive-print figcaption{padding:12px 0 0;color:var(--ink);line-height:1.45}
+.archive-print figcaption strong{font:600 1rem/1.4 system-ui,sans-serif}
+.archive-print figcaption p{font-size:.98rem;margin:3px 0 5px;color:#42473f}
+.archive-print small{font:.78rem/1.5 system-ui,sans-serif;color:#555d51;display:block}
+.archive-print small a{text-decoration:underline;text-underline-offset:2px}
+.instrument-print{margin:0}.instrument-print img{height:clamp(220px,26vw,365px);mix-blend-mode:multiply}
+.article-body h3{font-size:1.18rem;line-height:1.4;margin:1.5em 0 .25em}
+.article-body section>p,.article-body figcaption p{line-height:1.65}
+@media(max-width:700px){.hero-camera img{height:235px}.article-hero{gap:20px}.archive-print figcaption{text-align:left}}

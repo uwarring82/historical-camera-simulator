@@ -1,6 +1,6 @@
 # Bundled asset register
 
-Original interface artwork uses MIT. The demonstration photograph has its own license. No NASA or manufacturer photographs, scanned manual diagrams, third-party fonts, or film-emulation LUTs are included.
+The collection combines original interface artwork, credited object photographs and historical images.
 
 | Asset | Origin and purpose | Rights and attribution |
 | --- | --- | --- |
@@ -12,6 +12,10 @@ Original interface artwork uses MIT. The demonstration photograph has its own li
 | `public/demo-scene.svg`, `public/demo-scene.png` | Existing original synthetic demonstration landscape. Not a historical photograph. | Project original artwork; MIT. |
 | `public/icons/icon.svg`, `public/icons/apple-touch-icon.png` | Existing original application icons. | Project original artwork; MIT. |
 
-Historical documentation is linked from `src/guide.mjs`; external documents and their images are not redistributed. Their rights remain with their respective owners. The on-page collection caption and field-guide notes identify the instrument portraits as illustrations.
+The field guide links to primary manuals and museum records. Image captions identify the author, source and reuse terms, including for photographs used in the studio.
 
 Desktop Chromium and iPhone-sized WebKit checks cover navigation, controls, demo capture, layout, and cached navigation. Physical iPhone camera capture, export/share-sheet behavior, and Home Screen installation still require device testing, as described in the existing project limitations.
+
+## Photographic collection
+
+The camera records in [src/collection](../src/collection) credit each local WebP, link its source and state its reproduction terms. The same photographs identify the working instruments in the studio. Third-party photographs retain their listed licenses. The Leica record links to additional examples on the photographer’s page.

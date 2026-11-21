@@ -7,8 +7,8 @@ export const CAMERAS = Object.freeze({
     description: 'Modified 500 EL, nominal Zeiss Biogon 60 mm, 53 × 53 mm negative. Near-blind historical aiming; réseau recorded at the film plane.',
     mechanicalEvidence: 'A', renderingEvidence: 'C', category: 'scientific',
     frameMm: 53, frameHeightMm: 53, nominalFocalMm: 60,
-    apertureOptions: ['f/5.6', 'f/8', 'f/11', 'f/16', 'f/22'], shutterOptions: timedShutters,
-    defaults: { aperture: 'f/5.6', shutter: '1/125 s', focus: '∞', magazine: 'loaded' },
+    apertureOptions: ['f/5.6', 'f/8', 'f/11', 'f/16'], shutterOptions: timedShutters,
+    defaults: { aperture: 'f/5.6', shutter: '1/125 s', focus: '74 ft', magazine: 'loaded' },
     references: ['zeiss-biogon', 'alsj-reseau', 'nasa-apollo17']
   },
   sx70: {
