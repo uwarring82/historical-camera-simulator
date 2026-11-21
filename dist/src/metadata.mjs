@@ -1,5 +1,5 @@
-import { filmFor } from './film.mjs';
-import { getCamera } from './cameras.mjs';
+import { filmFor } from './film.mjs?v=fde86c21ec6991c7';
+import { getCamera } from './cameras.mjs?v=fde86c21ec6991c7';
 export function photographMetadata(cameraId, state, settings, provenance) {
   const c = getCamera(cameraId);
   return {

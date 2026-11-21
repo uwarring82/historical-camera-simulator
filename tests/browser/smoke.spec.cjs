@@ -87,12 +87,11 @@ test('pages fit their viewport and provide readable navigation', async({page}, t
 test('the cached field guide opens an unvisited chapter after its origin stops', async({page}) => {
  // A real origin outage avoids WebKit's known offline-emulation fault:
  // https://github.com/microsoft/playwright/issues/42775
- const root = process.cwd();
+ const root = path.resolve('dist');
  const types = {'.html':'text/html','.css':'text/css','.mjs':'text/javascript','.js':'text/javascript','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.webmanifest':'application/manifest+json'};
  const server = createServer(async(req,res)=>{
   const file = new URL(req.url,'http://localhost').pathname.slice(1) || 'index.html';
-  const relative = /^(sw\.js|(?:manifest|studio)\.webmanifest|demo-scene\.|collection\/|icons\/)/.test(file) ? path.join('public',file) : file;
-  const target = path.resolve(root,relative);
+  const target = path.resolve(root,file);
   if (!target.startsWith(root+path.sep)) {res.writeHead(403).end();return;}
   try { const body = await readFile(target); res.writeHead(200,{'Content-Type':types[path.extname(target)] || 'application/octet-stream'}).end(body); }
   catch { res.writeHead(404).end(); }

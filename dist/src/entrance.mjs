@@ -1,7 +1,7 @@
-import { CAMERA_ORDER, getCamera } from './cameras.mjs';
-import { bodyPhoto } from './collection.mjs';
-import { CAMERA_STORIES } from './guide.mjs';
-import './site.mjs';
+import { CAMERA_ORDER, getCamera } from './cameras.mjs?v=fde86c21ec6991c7';
+import { bodyPhoto } from './collection.mjs?v=fde86c21ec6991c7';
+import { CAMERA_STORIES } from './guide.mjs?v=fde86c21ec6991c7';
+import './site.mjs?v=fde86c21ec6991c7';
 const $ = id => document.getElementById(id);
 function previewCamera(id) {
   const camera = getCamera(id), story = CAMERA_STORIES[id];

@@ -1,7 +1,7 @@
-import { CAMERAS, CAMERA_ORDER } from './cameras.mjs';
-import { CAMERA_STORIES, CHAPTERS, SOURCES } from './guide.mjs';
-import { collection, bodyPhoto } from './collection.mjs';
-import './site.mjs';
+import { CAMERAS, CAMERA_ORDER } from './cameras.mjs?v=fde86c21ec6991c7';
+import { CAMERA_STORIES, CHAPTERS, SOURCES } from './guide.mjs?v=fde86c21ec6991c7';
+import { collection, bodyPhoto } from './collection.mjs?v=fde86c21ec6991c7';
+import './site.mjs?v=fde86c21ec6991c7';
 const requested = new URLSearchParams(location.search).get('chapter') || 'history';
 const id = Object.hasOwn(CAMERA_STORIES, requested) || Object.hasOwn(CHAPTERS, requested) ? requested : 'history';
 const camera = CAMERAS[id], story = CAMERA_STORIES[id], chapter = CHAPTERS[id];

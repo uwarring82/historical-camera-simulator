@@ -1,7 +1,7 @@
-import { getCamera } from './cameras.mjs';
-import { filmFor, densityNoise } from './film.mjs';
-import { stampReseau } from './reseau.mjs';
-import { rowBlurRadius } from './exposure.mjs';
+import { getCamera } from './cameras.mjs?v=fde86c21ec6991c7';
+import { filmFor, densityNoise } from './film.mjs?v=fde86c21ec6991c7';
+import { stampReseau } from './reseau.mjs?v=fde86c21ec6991c7';
+import { rowBlurRadius } from './exposure.mjs?v=fde86c21ec6991c7';
 
 // An sRGB input is our proxy for scene light. Compress highlights after exposure
 // using a smooth shoulder; the transfer is an interpretation of a developed print.

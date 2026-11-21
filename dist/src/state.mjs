@@ -1,5 +1,5 @@
-import { FILM_OPTIONS } from './film.mjs';
-import { getCamera } from './cameras.mjs';
+import { FILM_OPTIONS } from './film.mjs?v=fde86c21ec6991c7';
+import { getCamera } from './cameras.mjs?v=fde86c21ec6991c7';
 
 /** Pure mechanical state machine; UI and camera hardware do not own this state. */
 export function newCameraState(cameraId) {

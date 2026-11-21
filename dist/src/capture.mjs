@@ -1,4 +1,4 @@
-import { CAMERAS } from './cameras.mjs';
+import { CAMERAS } from './cameras.mjs?v=fde86c21ec6991c7';
 
 /** Browser capture adapter. Photo resolution/metadata must be measured on actual iPhones. */
 export class CaptureAdapter {

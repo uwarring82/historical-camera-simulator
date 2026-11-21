@@ -1,5 +1,5 @@
-import { getCamera } from './cameras.mjs';
-import { filmFor } from './film.mjs';
+import { getCamera } from './cameras.mjs?v=fde86c21ec6991c7';
+import { filmFor } from './film.mjs?v=fde86c21ec6991c7';
 
 // The browser supplies a developed picture with unknown scene radiance. Treat its
 // middle gray as correctly exposed at ISO 100, f/5.6, 1/125 s for relative comparisons.

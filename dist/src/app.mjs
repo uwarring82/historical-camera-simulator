@@ -1,13 +1,13 @@
-import { CAMERA_ORDER, getCamera } from './cameras.mjs';
-import { FILMS, FILM_OPTIONS, filmSpeedLabel } from './film.mjs';
-import { newCameraState, updateCamera, canExpose, cameraStatus } from './state.mjs';
-import { renderReference, depthBlur } from './render.mjs';
-import { CaptureAdapter, imageFromFile, sourceToFrame, frameSize, viewGeometry } from './capture.mjs';
-import { cameraRenderParams, meterStops, settingsSummary, dofParams } from './exposure.mjs';
-import { photographMetadata, downloadBlob } from './metadata.mjs';
-import { collection, bodyPhoto } from './collection.mjs';
-import { mountBodyControls } from './body-controls.mjs';
-import './site.mjs';
+import { CAMERA_ORDER, getCamera } from './cameras.mjs?v=fde86c21ec6991c7';
+import { FILMS, FILM_OPTIONS, filmSpeedLabel } from './film.mjs?v=fde86c21ec6991c7';
+import { newCameraState, updateCamera, canExpose, cameraStatus } from './state.mjs?v=fde86c21ec6991c7';
+import { renderReference, depthBlur } from './render.mjs?v=fde86c21ec6991c7';
+import { CaptureAdapter, imageFromFile, sourceToFrame, frameSize, viewGeometry } from './capture.mjs?v=fde86c21ec6991c7';
+import { cameraRenderParams, meterStops, settingsSummary, dofParams } from './exposure.mjs?v=fde86c21ec6991c7';
+import { photographMetadata, downloadBlob } from './metadata.mjs?v=fde86c21ec6991c7';
+import { collection, bodyPhoto } from './collection.mjs?v=fde86c21ec6991c7';
+import { mountBodyControls } from './body-controls.mjs?v=fde86c21ec6991c7';
+import './site.mjs?v=fde86c21ec6991c7';
 
 const $ = id => document.getElementById(id);
 const bodies = Object.fromEntries(CAMERA_ORDER.map(id => [id, newCameraState(id)]));
